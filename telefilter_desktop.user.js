@@ -193,6 +193,19 @@
   const locatorPart = value => { const n = Number(value); return Number.isFinite(n) && n ? String(n) : '0'; };
 
   function ico(code) {
+    const paths = {
+      ea87: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+      e9c3: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1"/><path d="m3 17 6-6 4 4 3-3 5 5"/>',
+      e9b5: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/>',
+      e979: '<path d="M14 2H6v20h12V6Zm0 0v5h4M8 12h8M8 16h8"/>',
+      ea84: '<path d="m12 3 3 6 6 1-4 5 1 6-6-3-6 3 1-6-4-5 6-1Z"/>',
+    };
+    if (paths[code]) {
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      for (const [key, value] of Object.entries({viewBox:'0 0 24 24',width:'16',height:'16',fill:'none',stroke:'currentColor','stroke-width':'1.75','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true',focusable:'false'})) icon.setAttribute(key, value);
+      icon.innerHTML = paths[code]; // Static local SVG paths only.
+      return icon;
+    }
     const el = document.createElement('span');
     el.className = 'tgico';
     el.setAttribute('aria-hidden', 'true');
@@ -355,7 +368,6 @@
 
   /* ─── GLOBAL STATE ─────────────── */
   const S = {
-    expanded: false,
     fActive: new Set(),
     isScrolling: false,
     scrollTimer: 0,
@@ -388,7 +400,6 @@
     mediaRecheckFrame: 0,
     mediaDirtyDuringScroll: false,
     dialogClose: null,
-    toggleBadge: null,
     history: [],
     bookmarks: [],
     bmKeys: new Set(),
@@ -699,12 +710,13 @@
     dlBtn.style.display = 'inline-flex';
     dlBtn.classList.toggle('is-running', S.batchRunning);
     dlBtn.disabled = S.batchRunning;
-    const modeLabel = S.zipMode ? '📦 ZIP Download' : '📥 Download';
+    const modeLabel = S.zipMode ? 'ZIP Download' : 'Download';
     dlBtn.querySelector('.tf3-dl-label').textContent = S.batchRunning ? 'Downloading...' : modeLabel;
 
     if (S.zipPill) {
-      S.zipPill.classList.toggle('active', S.zipMode);
       S.zipPill.setAttribute('aria-pressed', String(S.zipMode));
+      S.zipPill.textContent = S.zipMode ? 'Bundle as ZIP: On' : 'Bundle as ZIP: Off';
+      S.zipPill.classList.toggle('active', S.zipMode);
     }
   }
 
@@ -1048,7 +1060,7 @@
       }
     } finally {
       isHarvesting = false;
-      if (pill) { pill.classList.remove('is-running'); pill.textContent = '⚡ Harvest'; }
+      if (pill) { pill.classList.remove('is-running'); pill.textContent = 'Harvest history'; }
       if (valid()) { forceRefreshLazyMedia(); queueBadgeUpdate(); }
     }
     return gained;
@@ -1064,7 +1076,7 @@
     showActionAck('Harvesting history...', S.harvestPill, 'ok');
     const anchor = S.harvestPill;
     runDeepHarvester(300, (cur, total, seconds) => {
-      if (anchor) anchor.textContent = `⏹ ${cur}/${total} · ${seconds}s`;
+      if (anchor) anchor.textContent = `Stop · ${cur}/${total} · ${seconds}s`;
     }).then(gained => {
       showActionAck(`Indexed +${gained} items`, anchor, 'ok');
     }).catch(err => { recordError('Harvest', err); showActionAck('Harvest failed', anchor, 'danger'); });
@@ -1613,11 +1625,12 @@
   }
 
   function updateBadge() {
-    if (!S.toggleBadge) return;
     const total = S.mediaCount;
-    S.toggleBadge.textContent = total > 9999 ? Math.floor(total / 1000) + 'k+' : (total || '');
-    S.toggleBadge.parentElement.title = total + ' loaded media — click to open Telefilter';
-
+    if (S.bmPill) {
+      const tip = 'Library — ' + total + ' loaded media';
+      S.bmPill.title = tip;
+      S.bmPill.setAttribute('aria-label', tip);
+    }
     if (S.bar) {
       FILTERS.forEach(f => {
         const pill = S.bar.querySelector(`.tf3-pill[data-key="${f.key}"]`);
@@ -1883,7 +1896,10 @@
   }
 
   function pnl() {
-    if (S.panel?.isConnected) { syncDialogTheme(S.panel); return S.panel; }
+    if (S.panel) {
+      if (S.bar && S.panel.parentElement !== S.bar) S.bar.appendChild(S.panel);
+      syncDialogTheme(S.panel); return S.panel;
+    }
     const p = document.createElement('div');
     p.id = 'tf3-panel';
     p.addEventListener('click', handleControlFeedback, true);
@@ -1894,7 +1910,7 @@
       <div class="hr"><button type="button" class="rr" aria-label="Retry failed" title="Retry failed" style="display:none">↻</button><button type="button" class="pp" aria-label="Pause queue" title="Pause queue">Ⅱ</button><button type="button" class="cc" aria-label="Cancel">${ico('e973').outerHTML}</button><button type="button" class="xx" aria-label="Close">${ico('e95d').outerHTML}</button></div></div>
       <div class="b"><div class="pb" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="pf"></div></div><div class="fn"></div><div class="st"></div></div>`;
     p.querySelector('.xx').onclick = () => { S.panelDismissed = true; p.style.display = 'none'; };
-    document.body.appendChild(p);
+    if (S.bar) S.bar.appendChild(p);
     S.panel = p;
     S.panelRefs = {
       label: p.querySelector('.l'),
@@ -1943,14 +1959,6 @@
       downloadTargets(retry, `Retry failed · ${retry.length} items`, last.peerId, last.chatTitle, last.ctx || {});
     } : null;
     schedulePanelHide(failed ? 8000 : 3500);
-  }
-
-  function setBarExpanded(ex) {
-    S.expanded = ex;
-    if (!S.bar) return;
-    S.bar.classList.toggle('expanded', ex);
-    S.bar.querySelector('.tf3-toggle')?.setAttribute('aria-expanded', String(ex));
-    S.bar.querySelector('.tf3-content')?.setAttribute('aria-hidden', String(!ex));
   }
 
   function mountDialog(overlay) {
@@ -2115,24 +2123,10 @@
     bar.dataset.version = VERSION;
     bar.addEventListener('click', handleControlFeedback, true);
 
-    const toggle = document.createElement('button');
-    toggle.className = 'tf3-toggle';
-    toggle.type = 'button';
-    toggle.title = 'Telefilter';
-    toggle.setAttribute('aria-label', 'Toggle Telefilter');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.setAttribute('aria-controls', 'tf3-controls');
-    toggle.appendChild(ico('e994'));
-    const badge = document.createElement('span');
-    badge.className = 'tf3-bdg';
-    S.toggleBadge = badge;
-    toggle.appendChild(badge);
-    toggle.onclick = () => { setBarExpanded(!S.expanded); if (S.expanded) updateBadge(); };
-
     const content = document.createElement('div');
     content.className = 'tf3-content';
     content.id = 'tf3-controls';
-    content.setAttribute('aria-hidden', 'true');
+    content.setAttribute('aria-hidden', 'false');
 
     const pw = document.createElement('div');
     pw.className = 'tf3-pw';
@@ -2183,7 +2177,7 @@
     harvestBtn.className = 'tf3-pill tf5-harvest-pill';
     harvestBtn.type = 'button';
     harvestBtn.title = 'Deep Harvester: Scroll history upward to index all media';
-    harvestBtn.textContent = '⚡ Harvest';
+    harvestBtn.textContent = 'Harvest history';
     harvestBtn.onclick = toggleDeepHarvester;
     S.harvestPill = harvestBtn;
 
@@ -2192,7 +2186,8 @@
     zipBtn.className = 'tf3-pill tf5-zip-pill' + (S.zipMode ? ' active' : '');
     zipBtn.type = 'button';
     zipBtn.title = 'Toggle ZIP Mode (Bundle all downloads into a single .zip file)';
-    zipBtn.textContent = '📦 ZIP';
+    zipBtn.textContent = 'Bundle as ZIP';
+    zipBtn.setAttribute('aria-pressed', String(S.zipMode));
     zipBtn.onclick = () => {
       S.zipMode = !S.zipMode;
       saveStorage();
@@ -2210,7 +2205,7 @@
     dlBtn.setAttribute('aria-label', 'Download selected Telegram media');
     const dtxt = document.createElement('span');
     dtxt.className = 'tf3-dl-label';
-    dtxt.textContent = S.zipMode ? '📦 ZIP' : '📥 Download';
+    dtxt.textContent = S.zipMode ? 'ZIP Download' : 'Download';
     dlBtn.appendChild(dtxt);
     dlBtn.onclick = downloadNativeSelection;
     S.dlPill = dlBtn;
@@ -2236,9 +2231,41 @@
     sBtn.appendChild(ico('ea8d'));
     sBtn.onclick = showSettings;
 
-    aw.append(harvestBtn, zipBtn, dlBtn, bmBtn, sBtn);
+    // Native disclosures stay in layout: no popup covering messages.
+    const disclosure = (label, name) => {
+      const box = document.createElement('details');
+      box.className = 'tf3-disclosure ' + name;
+      const summary = document.createElement('summary');
+      summary.className = 'tf3-pill';
+      summary.textContent = label;
+      summary.setAttribute('aria-label', name === 'tf3-more' ? 'More tools' : 'Download format');
+      box.appendChild(summary);
+      box.addEventListener('keydown', ev => {
+        if (ev.key === 'Escape') { box.open = false; summary.focus(); ev.stopPropagation(); }
+      });
+      return box;
+    };
+    const format = disclosure('▾', 'tf3-format');
+    format.appendChild(zipBtn);
+    const split = document.createElement('div');
+    split.className = 'tf3-split';
+    split.append(dlBtn, format);
+    const more = disclosure('…', 'tf3-more');
+    const historyBtn = document.createElement('button');
+    historyBtn.type = 'button'; historyBtn.className = 'tf3-pill';
+    historyBtn.textContent = 'History'; historyBtn.onclick = showHistory;
+    sBtn.textContent = 'Settings';
+    sBtn.classList.remove('tf3-icon-pill');
+    more.append(harvestBtn, historyBtn, sBtn);
+    more.addEventListener('toggle', () => { if (more.open) format.open = false; });
+    format.addEventListener('toggle', () => { if (format.open) more.open = false; });
+    bmBtn.textContent = 'Library';
+    bmBtn.classList.remove('tf3-icon-pill');
+    bmBtn.appendChild(bmBadge);
+    aw.append(more, split, bmBtn);
     content.append(pw, aw);
-    bar.append(toggle, content);
+    bar.append(content);
+    if (S.panel) bar.appendChild(S.panel);
     return bar;
   }
 
@@ -2283,7 +2310,7 @@
     S.mediaCat = new WeakMap();
     S.mediaMid = new WeakMap();
     S.bubbles = null; S.col = null; S.bar = null;
-    S.dlPill = null; S.bmPill = null; S.toggleBadge = null; S.harvestPill = null; S.zipPill = null;
+    S.dlPill = null; S.bmPill = null; S.harvestPill = null; S.zipPill = null;
   }
 
   function inject(col) {
@@ -2342,9 +2369,9 @@
     const bubblesChanged = S.bubbles !== bub;
     const barChanged = S.bar !== bar;
     S.bar = bar; S.col = chat;
+    if (S.panel && S.panel.parentElement !== bar) bar.appendChild(S.panel);
     S.dlPill = bar.querySelector('#tf3-dlb');
     S.bmPill = bar.querySelector('.tf3-bm-pill');
-    S.toggleBadge = bar.querySelector('.tf3-bdg');
     S.harvestPill = bar.querySelector('.tf5-harvest-pill');
     S.zipPill = bar.querySelector('.tf5-zip-pill');
     syncBarTheme(bar, chat);
@@ -2362,7 +2389,6 @@
       S.dlSession.clear();
     }
     applyFilterState();
-    setBarExpanded(S.expanded);
     updateBookmarkPill();
     return true;
   }
@@ -2565,9 +2591,9 @@
       --tf3-radius-sm: 8px;
       --tf3-radius-md: 10px;
       --tf3-radius-lg: 14px;
-      position: sticky; top: 0; z-index: 10;
-      display: flex; align-items: center; box-sizing: border-box;
-      width: 100%; min-width: 0; min-height: 48px; padding: 6px 10px;
+      position: relative; z-index: 5;
+      display: flex; flex-direction:column; box-sizing: border-box;
+      width: 100%; min-width: 0; min-height: 40px; padding: 4px 8px;
       background: var(--tf3-surface); border-bottom: 1px solid var(--tf3-border);
       color: var(--tf3-text); contain: layout style paint;
       font: 13px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -2585,33 +2611,11 @@
     }
     .tf3-ctrl button { box-sizing: border-box; font: inherit; -webkit-appearance: none; appearance: none; }
 
-    /* Toggle Button */
-    .tf3-toggle {
-      position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
-      width: 34px; height: 34px; padding: 0; border: 1px solid var(--tf3-border); border-radius: var(--tf3-radius-md);
-      background: var(--tf3-subtle); color: var(--tf3-muted);
-      cursor: pointer; font-size: 16px; user-select: none;
-      transition: background .15s ease, color .15s ease, border-color .15s ease;
-    }
-    .tf3-toggle:hover { background: var(--tf3-subtle-hover); color: var(--tf3-text); border-color: color-mix(in srgb, var(--tf3-text) 16%, transparent); }
-    .tf3-toggle:active { transform: scale(.97); }
-    .tf3-ctrl.expanded .tf3-toggle { background: var(--tf3-subtle-hover); color: var(--tf3-accent); border-color: color-mix(in srgb, var(--tf3-accent) 40%, transparent); }
-
-    .tf3-bdg {
-      position: absolute; top: -4px; right: -4px; display: flex; align-items: center; justify-content: center;
-      min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box;
-      border: 2px solid var(--tf3-surface); border-radius: 999px;
-      background: #e0443e; color: #fff;
-      font-size: 9px; font-weight: 700; line-height: 1; pointer-events: none;
-    }
-    .tf3-bdg:empty { display: none; }
-
     /* Content Area */
-    .tf3-content { display: none; flex: 1; min-width: 0; align-items: center; gap: 8px; overflow: hidden; }
-    .tf3-ctrl.expanded .tf3-content { display: flex; }
-    .tf3-pw { display: flex; flex: 1; min-width: 0; gap: 4px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-inline: contain; }
+    .tf3-content { display: flex; width:100%; min-width:0; align-items:flex-start; gap:8px; }
+    .tf3-pw { display: flex; flex: 1; min-width: 0; gap: 4px; margin-left: 0; flex-wrap:wrap; }
     .tf3-pw::-webkit-scrollbar { display: none; }
-    .tf3-aw { position: relative; display: flex; flex: 0 0 auto; align-items: center; gap: 6px; margin-left: auto; padding-left: 10px; }
+    .tf3-aw { position: relative; display: flex; flex: 0 0 auto; align-items: flex-start; gap: 6px; margin-left: auto; padding-left: 6px; }
     .tf3-aw::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 1px; background: var(--tf3-border); }
 
     /* Filter & Action Pills */
@@ -2654,6 +2658,32 @@
     .tf5-harvest-pill { border: 1px solid var(--tf3-border); font-size: 12px; color: #0288d1; }
     .tf5-harvest-pill:hover { background: color-mix(in srgb, #0288d1 12%, transparent); }
 
+    /* Quiet inline toolbar: native details expand space, never overlay chat. */
+    .tf3-disclosure { min-width:32px; }
+    .tf3-disclosure > summary { list-style:none; min-height:32px; border:1px solid var(--tf3-border); }
+    .tf3-disclosure > summary::-webkit-details-marker { display:none; }
+    .tf3-disclosure[open] { border:1px solid var(--tf3-border); border-radius:8px; background:var(--tf3-surface); }
+    .tf3-disclosure[open] > button { display:flex; width:100%; justify-content:flex-start; white-space:normal; overflow-wrap:anywhere; }
+    .tf3-format { width:40px; }
+    .tf3-format[open] { width:110px; }
+    .tf3-more[open] { width:140px; }
+    .tf3-aw { flex-wrap:wrap; min-width:0; max-width:100%; }
+    .tf3-split { max-width:100%; }
+    .tf3-disclosure > summary:focus-visible { outline:2px solid var(--tf3-accent); outline-offset:1px; }
+    .tf3-split { display:flex; align-items:flex-start; }
+    .tf3-split > .tf3-download-pill { border-radius:8px 0 0 8px; }
+    .tf3-split > details > summary { border-radius:0 8px 8px 0; }
+    .tf3-bm-pill { position:relative; }
+    .tf3-cat-count, #tf3-panel { font-variant-numeric:tabular-nums; }
+    .tf3-ctrl #tf3-panel { border-radius:0; border:0; border-top:1px solid var(--tf3-border); box-shadow:none!important; animation:none; }
+    .tf3-ctrl { container-type:inline-size; }
+    @container (max-width:650px) {
+      .tf3-content { flex-wrap:wrap; }
+      .tf3-pw { flex-basis:100%; }
+      .tf3-aw { padding:0; margin-left:0; flex-wrap:wrap; }
+      .tf3-aw::before { display:none; }
+    }
+
     /* MediaViewer Action Overlay */
     .tf5-mv-actions {
       display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; z-index: 1000;
@@ -2693,11 +2723,11 @@
 
     .tf3-f_viral .bubble.tf3-has-reactions, .tf3-f_viral .Message.tf3-has-reactions { display: flex !important; }
 
-    /* ═══ DOWNLOAD STATUS PANEL — Clean Floating Card ═══ */
+    /* ═══ DOWNLOAD STATUS — Inline Row ═══ */
     #tf3-panel {
       --tf3-panel-accent: var(--theme-primary-color, var(--color-primary, #3390ec));
-      position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); z-index: 10000;
-      display: none; flex-direction: column; box-sizing: border-box; width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 32px);
+      position: relative;
+      display: none; flex-direction: column; box-sizing: border-box; width: 100%; margin-top:4px;
       overflow: hidden; border: 1px solid var(--tf3-border, rgba(0,0,0,.1)); border-radius: 14px;
       background: var(--tf3-surface, #ffffff); color: var(--tf3-text, #111418);
       box-shadow: 0 10px 30px -5px rgba(0,0,0,.18), 0 2px 6px -1px rgba(0,0,0,.08);
@@ -2846,7 +2876,7 @@
     #tf3-action-ack[data-tone="ok"] { background:#16733c; border-color:transparent; }
     #tf3-action-ack[data-tone="danger"] { background:#b8322d; border-color:transparent; }
     @media (max-width:560px) { .tf3-library-toolbar { align-items:flex-start; flex-direction:column; } }
-    @media (prefers-reduced-motion:reduce) { .tf3-toggle,.tf3-pill,#tf3-panel,#tf3-panel .pf,#tf3-overlay,.tf3-sx,.tf3-btn,.tf3-download-pill { animation:none!important; transition:none!important; } }
+    @media (prefers-reduced-motion:reduce) { .tf3-pill,#tf3-panel,#tf3-panel .pf,#tf3-overlay,.tf3-sx,.tf3-btn,.tf3-download-pill { animation:none!important; transition:none!important; } }
   `;
     document.documentElement.appendChild(css);
 
@@ -2866,11 +2896,11 @@
     #MiddleColumn .messages-layout > .tf3-ctrl {
       position:relative; z-index:5; flex-shrink:0;
       width:100%; margin-top:var(--middle-panel-inline-padding,.5rem);
-      border-radius:18px;
+      border-radius:0;
       background:var(--color-background,var(--surface-color,#fff));
-      box-shadow:0 5px 16px rgba(0,0,0,.09); box-sizing:border-box;
+      box-shadow:none; box-sizing:border-box;
     }
-    #MiddleColumn .messages-layout > .tf3-ctrl.expanded { border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
+
     .theme-dark #MiddleColumn .messages-layout > .tf3-ctrl { background:var(--color-background,var(--surface-color,#1c1c1e)); }
   `;
     document.documentElement.appendChild(adaptCss);

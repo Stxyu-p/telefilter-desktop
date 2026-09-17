@@ -148,6 +148,18 @@ node telefilter_desktop.smoke.test.js
 | Legacy smoke suite | Source-presence checks and selected pure helpers; its success banner is **not** an end-to-end guarantee. |
 | Owner feedback | The owner reported the mixed-album ZIP fix working in Telegram. This live result was **not independently verified by MIKA**. |
 
+### Inline toolbar UI check
+
+The toolbar is always visible. Use **More** for Harvest, History and Settings; use the chevron next to **Download** for ZIP mode. Download progress now occupies space inside the toolbar instead of a floating corner card. Narrow chat panes may use additional rows.
+
+The optional browser check requires an existing Playwright installation and Chromium:
+
+```bash
+node telefilter_desktop.ui.check.cjs
+```
+
+If they are outside the project, set `PLAYWRIGHT_MODULE` to the installed Playwright module path and `CHROMIUM_PATH` to the browser executable. These are test-only dependencies, not userscript dependencies. The check uses an isolated fixture with stubbed Telegram actions; it does not log into Telegram or download account content.
+
 ### Quality-only maintenance
 
 Preserve the working baseline. Prioritize correctness, resource use, API compatibility, accessibility and maintainability. Do not add new features or frameworks as part of the quality audit.
