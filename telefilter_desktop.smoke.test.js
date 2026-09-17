@@ -1,11 +1,11 @@
-// test_telefilter_v5.js
+// telefilter_desktop.smoke.test.js
 // SORA Comprehensive Verification Test Suite for Telefilter v5 (Ultimate)
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
 const vm = require('vm');
 
-const scriptPath = path.join(__dirname, 'telefilter_desktop_v4.user.js');
+const scriptPath = path.join(__dirname, 'telefilter_desktop.user.js');
 const code = fs.readFileSync(scriptPath, 'utf-8');
 
 console.log('=== TELEFILTER V5 VERIFICATION TEST SUITE ===\n');

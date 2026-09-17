@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-const source = fs.readFileSync(path.join(__dirname, 'telefilter_desktop_v4.user.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, 'telefilter_desktop.user.js'), 'utf8');
 function section(from, to) {
   const start = source.indexOf(from), end = source.indexOf(to, start + from.length);
   assert(start >= 0 && end > start, `Missing section: ${from}`);
