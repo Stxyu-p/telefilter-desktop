@@ -700,7 +700,7 @@
     dlBtn.classList.toggle('is-running', S.batchRunning);
     dlBtn.disabled = S.batchRunning;
     const modeLabel = S.zipMode ? '📦 ZIP Download' : '📥 Download';
-    dlBtn.querySelector('.tf3-dl-label').textContent = S.batchRunning ? '⏳ Downloading...' : modeLabel;
+    dlBtn.querySelector('.tf3-dl-label').textContent = S.batchRunning ? 'Downloading...' : modeLabel;
 
     if (S.zipPill) {
       S.zipPill.classList.toggle('active', S.zipMode);
@@ -2644,9 +2644,8 @@
       color: #64b5f6;
     }
     .tf3-download-pill:hover { background: var(--tf3-accent); color: #ffffff; border-color: var(--tf3-accent); }
-    .tf3-download-pill.is-running, .tf3-pill.is-running { animation: tf3-pulse 1.2s ease-in-out infinite; }
+    .tf3-pill.is-running { opacity: .75; }
     .tf3-pill.is-running:not(.tf5-harvest-pill) { pointer-events: none; }
-    @keyframes tf3-pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
 
     /* Extra Action Pills (ZIP & Harvest) */
     .tf5-zip-pill { border: 1px solid var(--tf3-border); font-size: 12px; }
