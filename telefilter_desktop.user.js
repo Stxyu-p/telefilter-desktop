@@ -2390,6 +2390,21 @@
     }
     applyFilterState();
     updateBookmarkPill();
+    // tf5-ui-debug: temporary diagnostic; prints bar geometry on every inject. Remove after layout fix.
+    try {
+      const r = bar.getBoundingClientRect();
+      const cs = getComputedStyle(bar), pcs = getComputedStyle(bar.parentElement);
+      window.__TF5_UI_DEBUG = {
+        time: new Date().toISOString(), version: VERSION,
+        parent: bar.parentElement.tagName + '.' + String(bar.parentElement.className).slice(0, 100),
+        grandparent: bar.parentElement.parentElement?.tagName + '.' + String(bar.parentElement.parentElement?.className || '').slice(0, 100),
+        offsetParent: bar.offsetParent ? bar.offsetParent.tagName + '.' + String(bar.offsetParent.className).slice(0, 100) : null,
+        rect: { w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top), left: Math.round(r.left) },
+        barStyle: { display: cs.display, position: cs.position, width: cs.width, flexDir: cs.flexDirection },
+        parentStyle: { tag: bar.parentElement.tagName, display: pcs.display, flexDir: pcs.flexDirection, width: pcs.width },
+      };
+      console.info('[TF5 UI debug]', JSON.stringify(window.__TF5_UI_DEBUG));
+    } catch (e) { /* diagnostics must never break injection */ }
     return true;
   }
 
