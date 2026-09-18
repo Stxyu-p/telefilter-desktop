@@ -23,17 +23,11 @@
 
 ## 🧭 Visual Interface Map
 
-แถบเครื่องมือ **Inline Toolbar** สไตล์ Native Desktop ถูกฝังอยู่ใต้แถบหัวแชทพอดี ความสูงเพียง 34px ไม่กินพื้นที่หน้าจอ และไม่ทับข้อความ
+แถบเครื่องมือ **Inline Toolbar** ฝังเรียบเนียนใต้หัวแชท ความสูง 34px ขนาดกะทัดรัด พร้อม Floating Popovers ไม่ดันข้อความแชท
 
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│  [ All ] [ 📄 Text ] [ 🖼️ Photos ] [ 🎬 Videos ] [ 📁 Files ] [ ⭐ Viral ]  │  [ 📥 Download ▾ ] [ 🔖 Library ] [ … ] │
-└──────┬──────────────────────────────────────────────────────────────────────┴───────┬──────────────┬───────────┬───────┘
-       │                                                                              │              │           │
-       ▼                                                                              ▼              ▼           ▼
-  ตัวกรองข้อความ/สื่อ                                                          ดาวน์โหลด/สลับ ZIP    คลังบุ๊กมาร์ก  เครื่องมือเพิ่มเติม
-  (นับจำนวนสด + กรองทันที)                                                       (Split Button)    (ค้นหา/ย้อนแชท) (Harvest/Settings)
-```
+<p align="center">
+  <img src="assets/toolbar-map.svg" alt="Telefilter Desktop Interface Map" width="100%">
+</p>
 
 ---
 
@@ -70,15 +64,15 @@
 
 ---
 
-## 🛠️ Design & Technical Standards
+## 🛠️ Design & Architecture
 
-```text
-• Zero External Dependencies   — ไม่ใช้ไลบรารีภายนอก ไม่มี jQuery/Lodash ไฟล์เดี่ยวจบ
-• Solid Neutral Dark Surface   — คุมโทนสีเรียบหรูสไตล์ Desktop Native App สบายตา ไร้แสงฟุ้ง
-• Strict Baseline Rhythm       — ล็อกความสูงปุ่มเท่ากันที่ 28px และแถบสูงเพียง 34px
-• Non-intrusive Popovers       — เมนูย่อยลอยแบบ Floating Card ไม่ดันหน้าจอ ไม่บังแชท
-• Memory-Safe In-Memory ZIP    — สร้างไฟล์ ZIP32 บน Client ปลอดภัยต่อข้อมูลส่วนตัว 100%
-```
+| มาตรฐาน | รายละเอียด |
+| :--- | :--- |
+| **Zero Dependencies** | รหัส Vanilla JavaScript แท้ 100% ไม่มี jQuery, React หรือไลบรารีภายนอก |
+| **Solid Neutral Surface** | คุมโทนสี Dark Slate สไตล์ Desktop Native เรียบหรู สบายตา ไร้แสงนีออนฟุ้ง |
+| **Uniform Baseline** | ล็อกความสูงทุกปุ่มเท่ากันที่ 28px และแถบควบคุมบางเฉียบเพียง 34px |
+| **Floating Popovers** | เมนูย่อยลอยอิสระ ไม่ดันหน้าจอ ไม่ทำลาย Layout แชท |
+| **Client-Side Security** | รวม ZIP และบันทึกประวัติบนหน่วยความจำเบราว์เซอร์ ไม่ส่งข้อมูลออกภายนอก |
 
 ---
 
