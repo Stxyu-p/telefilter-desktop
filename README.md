@@ -2,20 +2,20 @@
 
 # ⚡ Telefilter Desktop <sub>v5.0.0</sub>
 
-**Media Intelligence Suite & Precision Downloader for Telegram WebK**
+**Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
-*Ultra-compact Inline Toolbar · Mixed-Album ZIP · Local Bookmark Library*  
-*Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side*
+*Ultra-compact Inline Toolbar · Mixed-Album ZIP32 Engine · Local Bookmark Vault*  
+*Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
-[![Install](https://img.shields.io/badge/Install-Userscript%20v5.0.0-0284c7?style=for-the-badge&logo=tampermonkey&logoColor=white)](telefilter_desktop.user.js)
-[![Release](https://img.shields.io/badge/Release-v5.0.0-10b981?style=for-the-badge)](telefilter_desktop.user.js)
-[![Platform](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
+[![Install Userscript](https://img.shields.io/badge/Install-One--Click%20Userscript-0284c7?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
+[![Release: v5.0.0](https://img.shields.io/badge/Release-v5.0.0-10b981?style=for-the-badge)](telefilter_desktop.user.js)
+[![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
-![Dependencies](https://img.shields.io/badge/Dependencies-Zero-success?style=flat-square)
-![Engine](https://img.shields.io/badge/Engine-Vanilla%20JS-cyan?style=flat-square)
-![Storage](https://img.shields.io/badge/Storage-IndexedDB%20Vault-blue?style=flat-square)
-![Design](https://img.shields.io/badge/Design-Clean%20Minimal%20Precision-purple?style=flat-square)
+![Dependencies: Zero](https://img.shields.io/badge/Dependencies-Zero-success?style=flat-square)
+![Engine: Vanilla JS](https://img.shields.io/badge/Engine-Vanilla%20JS-cyan?style=flat-square)
+![Storage: IndexedDB](https://img.shields.io/badge/Storage-IndexedDB%20Vault-blue?style=flat-square)
+![Design: Clean Minimal](https://img.shields.io/badge/Design-Clean%20Minimal%20Precision-purple?style=flat-square)
 
 </div>
 
@@ -23,7 +23,7 @@
 
 ## 🧭 Visual Interface Map
 
-แถบเครื่องมือ **Inline Toolbar** ฝังเรียบเนียนใต้หัวแชท ความสูง 34px ขนาดกะทัดรัด พร้อม Floating Popovers ไม่ดันข้อความแชท
+The ultra-compact **Inline Toolbar** sits seamlessly beneath the active chat header (34px height). Disclosures open as non-intrusive floating popovers with zero layout shift or chat occlusion.
 
 <p align="center">
   <img src="assets/toolbar-map.svg" alt="Telefilter Desktop Interface Map" width="100%">
@@ -31,75 +31,87 @@
 
 ---
 
-## ⚡ Core Features (ฟังก์ชันหลักที่ทำได้ทันที)
+## ⚡ Core Capabilities
 
-| ฟังก์ชัน | ไอคอน | ทำอะไรได้บ้าง | จุดเด่น |
+| Capability | Module | What It Does | Technical Advantage |
 | :--- | :---: | :--- | :--- |
-| **Instant Media Filters** | 🎛️ | กรองแสดงเฉพาะ **Text, Photos, Videos, Files, Viral** ในห้องแชททันที | ใช้ CSS filter ไม่ต้องโหลดหน้าใหม่ สลับไปมาได้ลื่นไหล ไม่กระตุก |
-| **Mixed-Album ZIP Engine** | 📦 | แตกอัลบั้มที่รวมรูปและวิดีโอหลายไฟล์ไว้ด้วยกัน แล้วมัดรวมเป็น **.zip ไฟล์เดียว** | ดึงไฟล์ครบทุกชิ้นในอัลบั้ม ตัดไฟล์ซ้ำ (Deduplicate) อัตโนมัติ |
-| **Native Direct Download** | 📥 | สตรีมดาวน์โหลดตรงผ่าน Telegram Download Manager เดิมของระบบ | สปีดเต็มที่ ไม่ผ่านเซิร์ฟเวอร์ภายนอก ไม่เปลืองแรม |
-| **Deep Harvester** | ⚡ | ระบบเลื่อนประวัติแชทขึ้นไปกวาด Index สื่อเก่าๆ ทั้งหมดมาเตรียมไว้ | ทะลุข้อจำกัด Virtual DOM ของ Telegram กวาดได้หลักพันข้อความ |
-| **Workspace & Library** | 🔖 | บุ๊กมาร์กข้อความสำคัญ เก็บพิกัดข้อความ พร้อมติดแท็กและโน้ตส่วนตัว | ค้นหาด้วยแท็ก (`tag:important`) หรือประเภทสื่อ แล้วคลิกกระโดดกลับไปที่แชทได้ทันที |
-| **Smart Naming & Captions** | 📝 | ตั้งชื่อไฟล์อัตโนมัติ `[YYYY-MM-DD]_[Chat]_[Sender]_[ID]` และเซฟแคปชัน `.txt` | ไฟล์ไม่ชนกัน รู้ที่มาของไฟล์ชัดเจน แคปชันไม่หาย |
-| **MediaViewer Overlay** | 👁️ | เพิ่มปุ่มเซฟและบุ๊กมาร์กบนหน้าจอพรีวิวรูป/วิดีโอ/สตอรี่แบบเต็มจอ | เซฟสื่อตรงหน้าที่กำลังเปิดดูได้ทันทีในคลิกเดียว |
-| **Deduplication Vault** | 🗄️ | จดจำประวัติการดาวน์โหลดลง IndexedDB ภายในเครื่อง | ป้องกันการกดดาวน์โหลดไฟล์เดิมซ้ำ ช่วยประหยัดพื้นที่ดิสก์ |
+| **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
+| **Mixed-Album ZIP Engine** | 📦 | Unpacks multi-item mixed photo/video albums into an organized, single **.zip archive**. | Built-in ZIP32 compiler; automatically deduplicates shared media keys. |
+| **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
+| **Deep Harvester** | ⚡ | Automated virtual scroller that traverses historical messages to build a media index. | Bypasses Telegram's Virtual DOM pruning limits for large chats. |
+| **Workspace Library** | 🔖 | Save message coordinates, tags, and local notes into an offline searchable index. | Jump directly back to any historical message origin with one click. |
+| **Smart Naming & Sidecars** | 📝 | Standardizes filenames `[YYYY-MM-DD]_[Chat]_[Sender]_[ID]` and exports sidecar `.txt` captions. | Prevents filename collisions and preserves message context. |
+| **MediaViewer Overlay** | 👁️ | Injects instant save and bookmark actions directly inside fullscreen media previews. | Quick-save media while browsing stories, photos, and full-screen clips. |
+| **Deduplication Vault** | 🗄️ | Local IndexedDB transaction ledger tracking previously downloaded media hashes. | Prevents redundant downloads and saves local disk storage. |
 
 ---
 
-## 🎯 Quick Workflow (วิธีใช้งานง่ายๆ 3 สเต็ป)
+## 🎯 Quick Workflow
 
-### 1. กรองดูสื่อที่ต้องการ
-คลิกปุ่มตัวกรองที่ต้องการบนแถบเครื่องมือ เช่น **Photos** หรือ **Videos** 
-- ข้อความที่ไม่เกี่ยวข้องจะถูกซ่อนทันที
-- ตัวเลขบนปุ่มจะแสดงจำนวนสื่อที่มีอยู่ในแชทปัจจุบัน
-- ดับเบิ้ลคลิกที่ปุ่มตัวกรองเพื่อสั่งโหลดสื่อประเภทนั้นทั้งหมดในรอบเดียว
+```
+[ 1. Filter & Inspect ] ──▶ [ 2. Select Direct / ZIP ] ──▶ [ 3. Save & Organize ]
+```
 
-### 2. ดาวน์โหลดเดี่ยว หรือ มัดรวม ZIP
-- **โหมดปกติ:** เลือกข้อความในแชทแล้วคลิกปุ่ม `Download`
-- **โหมดรวมไฟล์ ZIP:** คลิกที่หัวลูกศร `▾` ด้านข้างปุ่ม แล้วเลือก `Bundle as ZIP` ปุ่มจะเปลี่ยนเป็น `ZIP Download` ทันที เมื่อกดดาวน์โหลด สื่อทั้งหมดในอัลบั้มจะถูกรวมเป็นก้อน .zip ก้อนเดียว
+### 1. Filter & Isolate
+Click any media pill (**Photos**, **Videos**, **Files**) on the toolbar:
+- Irrelevant chat bubbles are instantly hidden via CSS.
+- Badge counters display real-time media counts in the current view.
+- **Pro-tip:** Double-click any filter pill to batch-select all items in that category.
 
-### 3. เปิดดูคลังหรือเครื่องมือขั้นสูง
-- คลิก **`Library`** เพื่อเปิดสมุดบุ๊กมาร์ก ค้นหาโพสต์เก่า หรือกระโดดกลับไปยังตำแหน่งข้อความนั้นๆ ใน Telegram
-- คลิก **`…`** เพื่อเปิด Deep Harvester สแกนย้อนประวัติแชท หรือเข้าสู่การตั้งค่าระบบ (Settings)
+### 2. Choose Download Mode
+- **Direct Stream:** Select messages and click `Download` for standard browser download handling.
+- **ZIP Archive:** Click the **`▾`** split arrow and toggle `Bundle as ZIP`. The button changes to `ZIP Download` and compresses all selected media into one organized archive.
+
+### 3. Bookmark & Harvest
+- Click **`Library`** to view saved message pins, search custom tags, or jump directly to chat coordinates.
+- Click **`…`** to launch the automated Deep Harvester or configure custom naming rules.
 
 ---
 
-## 🛠️ Design & Architecture
+## 🛠️ Design & Engineering Principles
 
-| มาตรฐาน | รายละเอียด |
+| Principle | Specification |
 | :--- | :--- |
-| **Zero Dependencies** | รหัส Vanilla JavaScript แท้ 100% ไม่มี jQuery, React หรือไลบรารีภายนอก |
-| **Solid Neutral Surface** | คุมโทนสี Dark Slate สไตล์ Desktop Native เรียบหรู สบายตา ไร้แสงนีออนฟุ้ง |
-| **Uniform Baseline** | ล็อกความสูงทุกปุ่มเท่ากันที่ 28px และแถบควบคุมบางเฉียบเพียง 34px |
-| **Floating Popovers** | เมนูย่อยลอยอิสระ ไม่ดันหน้าจอ ไม่ทำลาย Layout แชท |
-| **Client-Side Security** | รวม ZIP และบันทึกประวัติบนหน่วยความจำเบราว์เซอร์ ไม่ส่งข้อมูลออกภายนอก |
+| **Zero Dependencies** | 100% pure vanilla ES2022 JavaScript. No jQuery, React, or external CDN dependencies. |
+| **Solid Neutral Surface** | High-taste dark palette (`#131922`), hairline borders (`1px solid #2b3543`), and dual-layer shadows. |
+| **Strict Baseline Rhythm** | Standardized 28px button heights and a low-profile 34px toolbar to maximize chat viewport space. |
+| **Floating Popovers** | Sub-menus render out-of-flow as absolute popovers with click-outside auto-dismissal. |
+| **100% Local Privacy** | In-memory compression and IndexedDB transactions stay strictly local within the user's browser sandbox. |
 
 ---
 
-## 🚀 Installation (วิธีติดตั้ง)
+## 🚀 Installation & Setup
 
-1. ติดตั้งส่วนขยาย [Tampermonkey](https://www.tampermonkey.net/) บนเบราว์เซอร์ (Brave / Chrome / Edge)
-2. คัดลอกโค้ดทั้งหมดจากไฟล์ [`telefilter_desktop.user.js`](telefilter_desktop.user.js)
-3. ไปที่ Tampermonkey Dashboard → กดปุ่ม **+** (สร้าง Userscript ใหม่) → วางโค้ดแล้วกด **Ctrl + S** เพื่อบันทึก
-4. เปิดหรือรีเฟรชหน้า [Telegram WebK](https://web.telegram.org/k/) เข้าห้องแชท แถบเครื่องมือจะปรากฏพร้อมใช้งานทันที
+### Option A: One-Click Install (Recommended)
+1. Ensure you have [Tampermonkey](https://www.tampermonkey.net/) installed in your browser (Brave, Chrome, Firefox, or Edge).
+2. Click this direct install link:  
+   👉 **[Install Telefilter Desktop v5.0.0 (Direct RAW)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
+3. Tampermonkey will prompt you to confirm. Click **Install**.
+4. Open or refresh [Telegram WebK](https://web.telegram.org/k/). The toolbar appears automatically under your active chat header.
+
+### Option B: Manual Setup
+1. Copy the source code from [`telefilter_desktop.user.js`](telefilter_desktop.user.js).
+2. Open Tampermonkey Dashboard → click **Add a new script (+)**.
+3. Paste the code, press **Ctrl + S** (or **Cmd + S**) to save.
+4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
 
 ---
 
-## 🧪 Verification & Health Checks
+## 🧪 Verification & Test Suite
 
-รันชุดทดสอบความถูกต้องและสเปกเลย์เอาต์ทั้งหมดได้ด้วย Node.js (Built-in test runner):
+Run the built-in test suite to verify script syntax, regression coverage, and WebK flexbox layout integrity:
 
 ```bash
-# 1. ตรวจสอบ語法ไวยากรณ์สคริปต์
+# 1. Syntax and lexical validation
 node --check telefilter_desktop.user.js
 
-# 2. ทดสอบระบบ ZIP, การแตกอัลบั้ม และกลไกดาวน์โหลด (15 ผ่าน 15)
+# 2. Engine, ZIP32, and album-unpacking regression tests (15/15 passing)
 node --test telefilter_desktop.regression.test.js
 
-# 3. ตรวจสอบความถูกต้องของ UI และปุ่มกดบนเบราว์เซอร์เสมือน
+# 3. Headless browser UI layout & popover validation
 node telefilter_desktop.ui.check.cjs
 
-# 4. ทดสอบความสมบูรณ์ของเลย์เอาต์บน Telegram WebK Flexbox
+# 4. Telegram WebK Flexbox geometry & column constraint tests
 node telefilter_desktop.webk_layout.test.cjs
 ```
 
@@ -107,13 +119,13 @@ node telefilter_desktop.webk_layout.test.cjs
 
 ## 📄 License
 
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more details.
+This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
 
 ---
 
 <div align="center">
 
-**Telefilter Desktop** <sub>v5.0.0</sub> · Built for P Choke · Maintained with MIKA & the team  
+**Telefilter Desktop** <sub>v5.0.0</sub> · Maintained with high standards  
 *Clean Minimal Precision · High Taste · Zero Slop*
 
 </div>
