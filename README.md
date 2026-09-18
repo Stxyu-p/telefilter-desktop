@@ -7,8 +7,9 @@
 *Ultra-compact Inline Toolbar · Mixed-Album ZIP32 Engine · Local Bookmark Vault*  
 *Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
-[![Install Userscript](https://img.shields.io/badge/Install-One--Click%20Userscript-0284c7?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
-[![Release: v5.0.0](https://img.shields.io/badge/Release-v5.0.0-10b981?style=for-the-badge)](telefilter_desktop.user.js)
+[![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
+[![Release: v5.0.0](https://img.shields.io/badge/Release-v5.0.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -80,16 +81,21 @@ Click any media pill (**Photos**, **Videos**, **Files**) on the toolbar:
 
 ---
 
-## 🚀 Installation & Setup
+## 🚀 Installation & Distribution
 
-### Option A: One-Click Install (Recommended)
+### Option A: Install via Greasy Fork (Fastest · Auto-Updating)
 1. Ensure you have [Tampermonkey](https://www.tampermonkey.net/) installed in your browser (Brave, Chrome, Firefox, or Edge).
-2. Click this direct install link:  
-   👉 **[Install Telefilter Desktop v5.0.0 (Direct RAW)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
+2. Click to install directly from Greasy Fork:  
+   👉 **[Install from Greasy Fork (v5.0.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
 3. Tampermonkey will prompt you to confirm. Click **Install**.
-4. Open or refresh [Telegram WebK](https://web.telegram.org/k/). The toolbar appears automatically under your active chat header.
+4. *(Bonus)* Automatically receive future version updates directly within Tampermonkey!
 
-### Option B: Manual Setup
+### Option B: One-Click Direct Install (GitHub RAW)
+1. Click the GitHub raw distribution link:  
+   👉 **[Install via GitHub RAW](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
+2. Tampermonkey will open its installation dialog. Click **Install**.
+
+### Option C: Manual Setup
 1. Copy the source code from [`telefilter_desktop.user.js`](telefilter_desktop.user.js).
 2. Open Tampermonkey Dashboard → click **Add a new script (+)**.
 3. Paste the code, press **Ctrl + S** (or **Cmd + S**) to save.

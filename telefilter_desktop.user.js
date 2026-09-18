@@ -4,6 +4,11 @@
 // @version      5.0.0
 // @description  Telefilter v5 Ultimate: High-performance Telegram WebK assistant with zero-DOM media filters, pure client-side ZIP bundling, MediaViewer & Story action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
+// @license      MIT
+// @homepageURL  https://github.com/Stxyu-p/telefilter-desktop
+// @supportURL   https://github.com/Stxyu-p/telefilter-desktop/issues
+// @updateURL    https://greasyfork.org/scripts/596222-telefilter-desktop-edition-v5/code/telefilter-desktop-edition-v5.user.js
+// @downloadURL  https://greasyfork.org/scripts/596222-telefilter-desktop-edition-v5/code/telefilter-desktop-edition-v5.user.js
 // @match        https://web.telegram.org/*
 // @match        https://webk.telegram.org/*
 // @match        https://webz.telegram.org/*
