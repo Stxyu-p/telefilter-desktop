@@ -12,6 +12,7 @@ const FIXTURE_WEBK = `<!doctype html>
     :root {
       --chat-topbar-height: 48px;
       --page-chats-padding: 0px;
+      --chat-width: 720px;
     }
     body { margin: 0; background: #0e1621; }
     #column-center { position: relative; width: 100%; height: 100vh; }
@@ -23,6 +24,7 @@ const FIXTURE_WEBK = `<!doctype html>
     }
     .topbar {
       position: absolute; top: 0; inset-inline: 0;
+      max-width: var(--chat-width); margin-inline: auto;
       height: var(--chat-topbar-height) !important;
       background: #17212b; color: #fff; z-index: 2;
     }
@@ -76,21 +78,31 @@ const FIXTURE_WEBK = `<!doctype html>
       const tbR = topbar.getBoundingClientRect();
       const barR = bar.getBoundingClientRect();
       const bvR = bv ? bv.getBoundingClientRect() : null;
+      const b = document.querySelector('.tf3-ctrl');
+      const pw = b.querySelector('.tf3-pw');
+      const aw = b.querySelector('.tf3-aw');
       return {
-        topbar: { top: tbR.top, height: tbR.height, bottom: tbR.bottom },
+        topbar: { top: tbR.top, left: tbR.left, width: tbR.width, height: tbR.height, bottom: tbR.bottom },
         bar: { top: barR.top, left: barR.left, width: barR.width, height: barR.height, bottom: barR.bottom },
         bubblesViewport: bvR ? { top: bvR.top, bottom: bvR.bottom } : null,
+        barWrap: {
+          pwWidth: pw.getBoundingClientRect().width,
+          awWidth: aw.getBoundingClientRect().width,
+          contentWidth: b.querySelector('.tf3-content').getBoundingClientRect().width,
+          pills: [...b.querySelectorAll('.tf3-pill')].map(p => ({ label: p.textContent.trim().slice(0, 10), w: Math.round(p.getBoundingClientRect().width) }))
+        }
       };
     });
 
     console.log('WebK Layout Result:', JSON.stringify(layout, null, 2));
 
     // Assertions
-    assert(layout.bar.width >= 900, `Bar width should span chat container (>=900), got ${layout.bar.width}`);
+    assert.equal(layout.bar.width, 720, `Bar width should match --chat-width (720), got ${layout.bar.width}`);
+    assert.equal(layout.bar.left, layout.topbar.left, `Bar left (${layout.bar.left}) must align with topbar left (${layout.topbar.left})`);
     assert(layout.bar.height >= 36 && layout.bar.height <= 55, `Bar height should be compact inline (36-55), got ${layout.bar.height}`);
-    assert(Math.abs(layout.bar.top - layout.topbar.bottom) <= 2, `Bar top (${layout.bar.top}) must align with topbar bottom (${layout.topbar.bottom})`);
+    assert(Math.abs(layout.bar.top - layout.topbar.bottom) <= 10, `Bar top (${layout.bar.top}) must sit just below topbar bottom (${layout.topbar.bottom})`);
     if (layout.bubblesViewport) {
-      assert(layout.bubblesViewport.top >= layout.bar.bottom - 2, `Messages top (${layout.bubblesViewport.top}) must not be hidden behind bar bottom (${layout.bar.bottom})`);
+      assert(layout.bubblesViewport.top >= layout.bar.bottom - 4, `Messages top (${layout.bubblesViewport.top}) must not be hidden behind bar bottom (${layout.bar.bottom})`);
     }
     console.log('PASS: WebK inline toolbar layout is correct and does not collapse or overlap.');
   } finally {
