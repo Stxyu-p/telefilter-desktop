@@ -2309,7 +2309,7 @@
     S.mediaCount = 0;
     S.mediaCat = new WeakMap();
     S.mediaMid = new WeakMap();
-    S.bubbles = null; S.col = null; S.bar = null;
+    S.bubbles = null; S.col?.classList?.remove('tf3-chat-has-bar'); S.col = null; S.bar = null;
     S.dlPill = null; S.bmPill = null; S.harvestPill = null; S.zipPill = null;
   }
 
@@ -2369,6 +2369,7 @@
     const bubblesChanged = S.bubbles !== bub;
     const barChanged = S.bar !== bar;
     S.bar = bar; S.col = chat;
+    chat.classList.add('tf3-chat-has-bar');
     if (S.panel && S.panel.parentElement !== bar) bar.appendChild(S.panel);
     S.dlPill = bar.querySelector('#tf3-dlb');
     S.bmPill = bar.querySelector('.tf3-bm-pill');
@@ -2607,7 +2608,7 @@
       --tf3-radius-md: 10px;
       --tf3-radius-lg: 14px;
       position: relative; z-index: 5;
-      display: flex; flex-direction:column; box-sizing: border-box;
+      display: flex; flex-direction:column; align-self: stretch; box-sizing: border-box;
       width: 100%; min-width: 0; min-height: 40px; padding: 4px 8px;
       background: var(--tf3-surface); border-bottom: 1px solid var(--tf3-border);
       color: var(--tf3-text); contain: layout style paint;
@@ -2901,16 +2902,21 @@
     #column-center > .chat > .tf3-ctrl,
     #column-center .chat .tf3-ctrl {
       position:relative; z-index:5; flex-shrink:0;
-      width:auto; max-width:100%; margin:0; padding:4px 8px; box-sizing:border-box;
+      width:100% !important; align-self:stretch !important; max-width:100%;
+      margin:var(--chat-topbar-height, 3rem) 0 0 0; padding:4px 8px; box-sizing:border-box;
       background:var(--surface-color,#fff);
       border-bottom:1px solid color-mix(in srgb,var(--theme-border-color,#e0e0e0) 45%,transparent);
     }
     .theme-dark #column-center > .chat > .tf3-ctrl,
     .theme-dark #column-center .chat .tf3-ctrl { background:var(--surface-color,#1c1c1e); }
 
+    .chat:has(.tf3-ctrl), .chat.tf3-chat-has-bar {
+      --chat-padding-top: calc(var(--chat-topbar-height, 3rem) + var(--page-chats-padding, 0px) + var(--pinned-floating-height, 0px) + 42px) !important;
+    }
+
     #MiddleColumn .messages-layout > .tf3-ctrl {
       position:relative; z-index:5; flex-shrink:0;
-      width:100%; margin-top:var(--middle-panel-inline-padding,.5rem);
+      width:100% !important; align-self:stretch !important; margin-top:var(--middle-panel-inline-padding,.5rem);
       border-radius:0;
       background:var(--color-background,var(--surface-color,#fff));
       box-shadow:none; box-sizing:border-box;
