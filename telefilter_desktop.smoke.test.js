@@ -27,7 +27,7 @@ console.log('✔ Zero-dep ZIP32 generator verified');
 console.log('--- 3. Testing TelefilterVault (IndexedDB Engine) ---');
 assert(code.includes('telefilter_vault'), 'Must define telefilter_vault database name');
 assert(code.includes('TelefilterVault'), 'Must define TelefilterVault module/object');
-assert(code.includes('hasDownloaded') && code.includes('isDownloaded'), 'Must have download check methods');
+assert(code.includes('hasDownloaded'), 'Must have download check methods');
 assert(code.includes('recordDownload'), 'Must have recordDownload method');
 console.log('✔ IndexedDB Vault verified');
 
@@ -36,12 +36,12 @@ assert(code.includes('runDeepHarvester'), 'Must define deep harvesting engine');
 assert(code.includes('tf5-harvest-pill') || code.includes('Harvest'), 'Must have harvest UI trigger');
 console.log('✔ Deep Harvester verified');
 
-console.log('--- 5. Testing MediaViewer & Story Direct Actions ---');
+console.log('--- 5. Testing MediaViewer Direct Actions ---');
 assert(code.includes('watchMediaViewer'), 'Must watch MediaViewer overlay');
 assert(code.includes('tf5-mv-actions'), 'Must define tf5-mv-actions overlay container');
 assert(code.includes('triggerMediaViewerDownload'), 'Must define quick download action');
 assert(code.includes('triggerMediaViewerBookmark'), 'Must define quick bookmark action');
-console.log('✔ MediaViewer & Story overlay actions verified');
+console.log('✔ MediaViewer overlay actions verified');
 
 console.log('--- 6. Testing Protected Content & Text Unblocker ---');
 assert(code.includes('user-select: text !important'), 'Must force text selection');

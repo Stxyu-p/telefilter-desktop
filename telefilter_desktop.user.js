@@ -2,7 +2,7 @@
 // @name         Telefilter Desktop Edition v5
 // @namespace    telefilter-5
 // @version      5.0.0
-// @description  Telefilter v5 Ultimate: High-performance Telegram WebK assistant with zero-DOM media filters, pure client-side ZIP bundling, MediaViewer & Story action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
+// @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
 // @license      MIT
 // @homepageURL  https://github.com/Stxyu-p/telefilter-desktop
@@ -11,7 +11,6 @@
 // @downloadURL  https://greasyfork.org/scripts/596222-telefilter-desktop-edition-v5/code/telefilter-desktop-edition-v5.user.js
 // @match        https://web.telegram.org/*
 // @match        https://webk.telegram.org/*
-// @match        https://webz.telegram.org/*
 // @icon         https://web.telegram.org/k/assets/img/favicon.ico
 // @grant        none
 // @run-at       document-start
@@ -26,7 +25,7 @@
  * 📦  Pure Client-side ZIP32 Generator (Zero External Dependencies)
  * 🗄️  TelefilterVault: Persistent Deduplication via IndexedDB
  * ⚡  Deep Harvester: DOM Virtualization Buster with live progress
- * 👁️  MediaViewer & Story Direct Actions (Overlay buttons + Hotkeys D/B)
+ * 👁️  MediaViewer Direct Actions (Overlay buttons)
  * 🔓  Protected Content & Text Unblocker: Re-enables select, copy & context menu
  * 📝  Smart File Naming & Captions Sidecar (.txt metadata bundled)
  * 🔥  Reactions & Viral Scrubber: Fast filtering of top-reacted posts
@@ -39,7 +38,6 @@
 
   /* ─── GATE & ENVIRONMENT ──────────────── */
   const isWebK = location.hostname.includes('webk') ||
-                 location.hostname.includes('webz') ||
                  location.pathname.startsWith('/k/');
   if (!isWebK) {
     location.replace('https://web.telegram.org/k/' + location.hash);
@@ -309,13 +307,9 @@
     hasDownloaded(pid, mid) {
       return S.downloadedVaultKeys.has(mediaKey(pid, mid));
     },
-    isDownloaded(pid, mid) {
-      return this.hasDownloaded(pid, mid);
-    },
     async recordDownload(pid, mid, meta = {}) {
       const k = mediaKey(pid, mid);
       S.downloadedVaultKeys.add(k);
-      S.dlSession.add(k);
       if (!this.db) return;
       try {
         const tx = this.db.transaction('downloads', 'readwrite');
@@ -334,7 +328,6 @@
     },
     async clearVault() {
       S.downloadedVaultKeys.clear();
-      S.dlSession.clear();
       if (!this.db) return;
       try {
         const tx = this.db.transaction('downloads', 'readwrite');
@@ -410,7 +403,6 @@
     bmKeys: new Set(),
     chatFilters: new Map(),
     mediaIndex: new Map(), // peerId -> Map(mid -> cat)
-    dlSession: new Set(),
     downloadedVaultKeys: new Set(),
     errors: [],
     fActivePeer: null,
@@ -581,7 +573,7 @@
       return msg.reactions.results.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
     }
     if (!bubble || bubble.nodeType !== Node.ELEMENT_NODE) return 0;
-    const reactionItems = bubble.querySelectorAll('.reaction-item, .reaction-button, .reaction, .reactions-item');
+    const reactionItems = bubble.querySelectorAll('.reaction');
     if (reactionItems.length) {
       let count = 0;
       reactionItems.forEach(item => {
@@ -644,7 +636,7 @@
   function findBubbleByMid(mid) {
     if (!S.bubbles || !mid) return null;
     const sMid = String(mid);
-    let el = S.bubbles.querySelector(`[data-message-id="${sMid}"],[data-mid="${sMid}"],[data-msg-id="${sMid}"]`);
+    let el = S.bubbles.querySelector(`[data-mid="${sMid}"]`);
     if (el) return el;
     el = S.bubbles.querySelector(`#message-${sMid}, #message${sMid}, #msg-${sMid}, #msg${sMid}, [id$="-${sMid}"]`);
     if (el) return el;
@@ -824,9 +816,8 @@
       // Finish ZIP bundle if active and files were collected
       if (zipMode && zipFiles.length > 0 && !S.panelCancel) {
         S.panelRefs.status.textContent = 'Building ZIP archive...';
-        // ponytail: live-path diagnostics; remove once the album path is verified on Telegram.
-        console.info('[TF5 ZIP build]', { entries: zipFiles.length, bytes: zipBytes });
-        console.trace('[TF5 ZIP build path]');
+        // ponytail: DEBUG-gated diagnostics for the album ZIP path (enable via TF5_DEBUG=true).
+        debug('[TF5 ZIP build]', { entries: zipFiles.length, bytes: zipBytes });
         const zipBlob = createStoredZip(zipFiles);
         const pad = n => String(n).padStart(2, '0');
         const now = new Date();
@@ -905,10 +896,10 @@
         out.set(String(mid), msg);
       }
       // Counts only: no captions, media URLs, or account identifiers in diagnostics.
-      if (group) console.info('[TF5 ZIP album]', { parsed: summarize(members), uniqueSoFar: out.size });
+      if (group) debug('[TF5 ZIP album]', { parsed: summarize(members), uniqueSoFar: out.size });
     }
     const result = [...out.values()];
-    console.info('[TF5 ZIP targets]', { before: summarize(targets), after: summarize(result) });
+    debug('[TF5 ZIP targets]', { before: summarize(targets), after: summarize(result) });
     return result;
   }
 
@@ -1087,14 +1078,7 @@
     }).catch(err => { recordError('Harvest', err); showActionAck('Harvest failed', anchor, 'danger'); });
   }
 
-  /* ─── MEDIAVIEWER & STORY ACTION OVERLAY ─── */
-  function findActiveMediaViewerSlide() {
-    const slide = document.querySelector('#MediaViewer .MediaViewerSlide--active, .media-viewer-whole .media-viewer-mover.active') ||
-                  document.querySelector('.media-viewer-whole') ||
-                  document.querySelector('#StoryViewer, #stories-viewer');
-    return slide;
-  }
-
+  /* ─── MEDIAVIEWER ACTION OVERLAY ─── */
   function getActiveMediaViewerInfo() {
     const mv = document.querySelector('.media-viewer-whole, #MediaViewer');
     if (!mv) return null;
@@ -1171,7 +1155,7 @@
         dlBtn.type = 'button';
         dlBtn.className = 'tf3-btn tf3-btn-primary tf3-btn-sm';
         dlBtn.innerHTML = `${ico('e979').outerHTML} DL`;
-        dlBtn.title = 'Quick Download (Shortcut: D)';
+        dlBtn.title = 'Quick Download';
         dlBtn.onclick = ev => { ev.stopPropagation(); pulseControl(dlBtn); triggerMediaViewerDownload(); };
 
         const bmBtn = document.createElement('button');
@@ -1179,7 +1163,7 @@
         bmBtn.type = 'button';
         bmBtn.className = 'tf3-btn tf3-btn-sm';
         bmBtn.innerHTML = `${ico('ea8e').outerHTML} Save`;
-        bmBtn.title = 'Bookmark (Shortcut: B)';
+        bmBtn.title = 'Bookmark';
         bmBtn.onclick = ev => { ev.stopPropagation(); pulseControl(bmBtn); triggerMediaViewerBookmark(); };
 
         container.append(dlBtn, bmBtn);
@@ -1327,10 +1311,6 @@
     }
     if (typeof im.setPeer === 'function') {
       await im.setPeer(options);
-      return;
-    }
-    if (sameContext && typeof im.chat?.jumpToMessage === 'function') {
-      await im.chat.jumpToMessage(options.lastMsgId);
       return;
     }
     throw new Error('Telegram message navigation API unavailable');
@@ -1845,7 +1825,7 @@
     });
     S.mediaObserver.observe(bubbles, {
       subtree: true, childList: true, attributes: true,
-      attributeFilter: ['data-message-id', 'data-mid', 'data-msg-id'],
+      attributeFilter: ['data-mid'],
     });
   }
 
@@ -2005,7 +1985,7 @@
       failed: Math.max(0, safeTotal - safeOk),
       chat: chatTitle || document.title?.slice(0, 36) || '?',
     });
-    S.history = S.history.slice(0, 50);
+    S.history = S.history.slice(0, LIMITS.history);
     saveStorage();
   }
 
@@ -2216,24 +2196,26 @@
     S.dlPill = dlBtn;
 
     const bmBtn = document.createElement('button');
-    bmBtn.className = 'tf3-pill tf3-icon-pill tf3-bm-pill';
+    bmBtn.className = 'tf3-pill tf3-bm-pill';
     bmBtn.type = 'button';
     bmBtn.title = 'Workspace & Library';
     bmBtn.setAttribute('aria-label', 'Open Telefilter workspace');
-    bmBtn.appendChild(ico('ea8e'));
     const bmBadge = document.createElement('span');
     bmBadge.className = 'tf3-bm-count';
-    bmBtn.appendChild(bmBadge);
+    const bmLbl = document.createElement('span');
+    bmLbl.className = 'tf3-pill-label';
+    bmLbl.textContent = 'Library';
+    bmBtn.append(ico('ea8e'), bmLbl, bmBadge);
     bmBtn.onclick = showLocatorLibrary;
     S.bmPill = bmBtn;
     updateBookmarkPill();
 
     const sBtn = document.createElement('button');
-    sBtn.className = 'tf3-pill tf3-icon-pill';
+    sBtn.className = 'tf3-pill tf3-menu-item';
     sBtn.type = 'button';
+    sBtn.textContent = 'Settings';
     sBtn.title = 'Settings';
     sBtn.setAttribute('aria-label', 'Settings');
-    sBtn.appendChild(ico('ea8d'));
     sBtn.onclick = showSettings;
 
     // Popover disclosures float below button, avoiding in-flow toolbar stretching
@@ -2267,20 +2249,11 @@
     const historyBtn = document.createElement('button');
     historyBtn.type = 'button'; historyBtn.className = 'tf3-pill tf3-menu-item';
     historyBtn.textContent = 'History'; historyBtn.onclick = showHistory;
-    sBtn.textContent = 'Settings';
-    sBtn.className = 'tf3-pill tf3-menu-item';
     harvestBtn.classList.add('tf3-menu-item');
     more.menu.append(harvestBtn, historyBtn, sBtn);
 
     more.box.addEventListener('toggle', () => { if (more.box.open) format.box.open = false; });
     format.box.addEventListener('toggle', () => { if (format.box.open) more.box.open = false; });
-
-    bmBtn.classList.remove('tf3-icon-pill');
-    bmBtn.className = 'tf3-pill tf3-bm-pill';
-    const bmLbl = document.createElement('span');
-    bmLbl.className = 'tf3-pill-label';
-    bmLbl.textContent = 'Library';
-    bmBtn.replaceChildren(ico('ea8e'), bmLbl, bmBadge);
 
     aw.append(split, bmBtn, more.box);
     content.append(pw, aw);
@@ -2408,7 +2381,6 @@
       const storedF = S.chatFilters.get(fPid);
       S.fActive = new Set(storedF ? [...storedF] : []);
       S.fActivePeer = fPid;
-      S.dlSession.clear();
     }
     applyFilterState();
     updateBookmarkPill();
@@ -2425,13 +2397,13 @@
         barStyle: { display: cs.display, position: cs.position, width: cs.width, flexDir: cs.flexDirection },
         parentStyle: { tag: bar.parentElement.tagName, display: pcs.display, flexDir: pcs.flexDirection, width: pcs.width },
       };
-      console.info('[TF5 UI debug]', JSON.stringify(window.__TF5_UI_DEBUG));
+      debug('[TF5 UI debug]', JSON.stringify(window.__TF5_UI_DEBUG));
     } catch (e) { /* diagnostics must never break injection */ }
     return true;
   }
 
   /* ─── LEAN 2-ACTION RIGHT-CLICK (Download & Bookmark) ─── */
-  const MSG_SELECTOR = '[data-message-id],[data-mid],[data-msg-id]';
+  const MSG_SELECTOR = '[data-mid]';
   let ctxObserver = null, ctxTimers = [], ctxCleanupTimer = 0, ctxReqId = 0;
 
   function stopCtxWatch() {
@@ -2746,9 +2718,6 @@
     /* Library Button */
     .tf3-bm-pill { height: 28px; border: 1px solid var(--tf3-border); padding: 0 8px; }
     .tf3-bm-pill:hover { background: var(--tf3-subtle); color: var(--tf3-text); }
-    .tf3-bm-count { display: inline-flex; align-items: center; justify-content: center; min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: var(--tf3-accent); color: #fff; font-size: 9px; font-weight: 700; margin-left: 2px; }
-    .tf3-bm-count:empty { display: none; }
-    .tf3-icon-pill { width: 28px; height: 28px; padding: 0; }
 
     .tf3-cat-count, #tf3-panel { font-variant-numeric: tabular-nums; }
     .tf3-ctrl #tf3-panel { border-radius: 0; border: 0; border-top: 1px solid var(--tf3-border); box-shadow: none !important; animation: none; }
@@ -2772,7 +2741,7 @@
     .tf3-icon-pill { position: relative; width: 32px; height: 32px; padding: 0; border: 1px solid var(--tf3-border); border-radius: var(--tf3-radius-sm); background: transparent; }
     .tf3-icon-pill:hover { background: var(--tf3-subtle); border-color: color-mix(in srgb, var(--tf3-text) 14%, transparent); }
     .tf3-icon-pill .tgico { font-size: 14.5px; }
-    .tf3-bm-count { position: absolute; top: -3px; right: -3px; display: flex; align-items: center; justify-content: center; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 999px; background: var(--tf3-accent); color: #fff; font-size: 8.5px; font-weight: 700; }
+    .tf3-bm-count { position: absolute; top: -3px; right: -3px; margin-left: 2px; display: flex; align-items: center; justify-content: center; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 999px; background: var(--tf3-accent); color: #fff; font-size: 8.5px; font-weight: 700; }
     .tf3-bm-count:empty { display: none; }
     .tf3-row-actions { display:inline-flex; gap:6px; }
     .tf3-btn-sm { min-height:28px; padding:0 10px; border-radius:6px; font-size:11.5px; font-weight:600; }
@@ -3001,7 +2970,7 @@
   }
 
   /* ─── TEST HOOKS ──────────────────── */
-  if ((W.__TF5_TEST_MODE__ === true || W.__TF4_TEST_MODE__ === true || W.__TF3_TEST_MODE__ === true) && navigator?.userAgent === 'telefilter-node-test') {
+  if (W.__TF5_TEST_MODE__ === true && navigator?.userAgent === 'telefilter-node-test') {
     const testExport = Object.freeze({
       VERSION, locatorCtxFrom, sameLocatorContext, makeLocatorOptions,
       messagePeerId, requireRenderedTarget, getNativeSelectedMessages, selectionPeerIds,
@@ -3021,8 +2990,6 @@
       getMessageReactionCount, runDeepHarvester,
     });
     W.__TF5_TEST__ = testExport;
-    W.__TF4_TEST__ = testExport;
-    W.__TF3_TEST__ = testExport;
   }
 
   /* ─── INITIALIZATION ──────────────── */

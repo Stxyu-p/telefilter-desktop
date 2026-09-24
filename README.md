@@ -41,17 +41,13 @@ The ultra-compact **Inline Toolbar** sits seamlessly beneath the active chat hea
 | **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
 | **Deep Harvester** | ⚡ | Automated virtual scroller that traverses historical messages to build a media index. | Bypasses Telegram's Virtual DOM pruning limits for large chats. |
 | **Workspace Library** | 🔖 | Save message coordinates, tags, and local notes into an offline searchable index. | Jump directly back to any historical message origin with one click. |
-| **Smart Naming & Sidecars** | 📝 | Standardizes filenames `[YYYY-MM-DD]_[Chat]_[Sender]_[ID]` and exports sidecar `.txt` captions. | Prevents filename collisions and preserves message context. |
-| **MediaViewer Overlay** | 👁️ | Injects instant save and bookmark actions directly inside fullscreen media previews. | Quick-save media while browsing stories, photos, and full-screen clips. |
+| **Smart Naming & Sidecars** | 📝 | Standardizes filenames `[YYYY-MM-DD_HHMM]_[Chat]_[Filename]` and exports sidecar `.txt` captions. | Prevents filename collisions and preserves message context. |
+| **MediaViewer Overlay** | 👁️ | Injects instant save and bookmark actions directly inside fullscreen media previews. | Quick-save photos and videos directly from fullscreen previews. |
 | **Deduplication Vault** | 🗄️ | Local IndexedDB transaction ledger tracking previously downloaded media hashes. | Prevents redundant downloads and saves local disk storage. |
 
 ---
 
 ## 🎯 Quick Workflow
-
-```
-[ 1. Filter & Inspect ] ──▶ [ 2. Select Direct / ZIP ] ──▶ [ 3. Save & Organize ]
-```
 
 ### 1. Filter & Isolate
 Click any media pill (**Photos**, **Videos**, **Files**) on the toolbar:
@@ -73,19 +69,18 @@ Click any media pill (**Photos**, **Videos**, **Files**) on the toolbar:
 
 ### 1. In-Memory Streaming ZIP32 Compiler
 Telegram WebK presents complex challenges when handling mixed-media albums (interleaved photos and videos). Rather than using external bulky libraries (like JSZip), Telefilter Desktop embeds an ultra-optimized native ZIP32 compiler:
-- **Bitwise CRC32 Generator:** Utilizes a pre-computed 256-entry lookup table (`0xEDB88320` polynomial) to compute checksums in sub-millisecond time.
+- **Bitwise CRC32 Generator:** Pre-computed 256-entry lookup table (`0xEDB88320` polynomial), computed in a single pass over each entry.
 - **Zero-Allocation Memory Streams:** Constructs binary ZIP Local Headers, Central Directory Records, and End of Central Directory (EOCD) structures directly using native `Uint8Array` byte operations.
 - **Strict Garbage Isolation:** Releases temporary blob memory immediately after disk handoff, preventing memory leaks during large album downloads.
 
-### 2. Performance & Resource Footprint
+### 2. Resource Footprint
 
-| Metric | Measured Specification | Practical Outcome |
+| Metric | Specification | Practical Outcome |
 | :--- | :--- | :--- |
-| **Album Packing Speed** | **< 1.2 seconds** for 20 mixed items | Instant background compression |
-| **Peak RAM Allocation** | **< 45 MB** during active ZIP encoding | Never causes browser tab crashes or stutter |
-| **DOM Filter Latency** | **< 16 ms** (single animation frame) | 60 FPS smooth scrolling without re-renders |
+| **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed — no redundant CPU cost |
+| **Filter Application** | CSS class toggles only, no DOM rebuild | Chat never re-renders while filtering |
 | **External Dependencies** | **0** (Pure ES2022 JavaScript) | Zero supply-chain attack vectors |
-| **Telemetry & Outbound Calls**| **0 bytes** transmitted externally | Complete session and token privacy |
+| **Telemetry & Outbound Calls** | **0** — the only network call fetches the Telegram media itself | Complete session and token privacy |
 
 ---
 
@@ -125,20 +120,23 @@ Telegram WebK presents complex challenges when handling mixed-media albums (inte
 
 ## 🧪 Verification & Test Suite
 
-Run the built-in test suite to verify script syntax, regression coverage, and WebK flexbox layout integrity:
+Run the built-in test suite to verify script syntax, regression coverage, and production-WebK DOM integrity:
 
 ```bash
 # 1. Syntax and lexical validation
 node --check telefilter_desktop.user.js
 
-# 2. Engine, ZIP32, and album-unpacking regression tests (15/15 passing)
+# 2. Engine, ZIP32, and album-unpacking regression tests (15/15)
 node --test telefilter_desktop.regression.test.js
 
-# 3. Headless browser UI layout & popover validation
-node telefilter_desktop.ui.check.cjs
+# 3. Static + VM smoke suite
+node telefilter_desktop.smoke.test.js
 
-# 4. Telegram WebK Flexbox geometry & column constraint tests
+# 4. Headless-browser checks on production WebK DOM fixtures (run `npm install` once)
+node telefilter_desktop.ui.check.cjs
 node telefilter_desktop.webk_layout.test.cjs
+node telefilter_desktop.dom.check.cjs
+node telefilter_desktop.live.check.cjs   # full shipped script, end-to-end
 ```
 
 ---

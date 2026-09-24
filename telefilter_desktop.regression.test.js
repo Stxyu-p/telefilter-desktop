@@ -17,7 +17,7 @@ async function batch(scenario, failure = "", album = null) {
   const S = {batchRunning:false, zipMode:true, smartNaming:false, saveCaptions:false, panelRefs:refs};
   const ctx = {S, console, Date, Uint8Array, TextEncoder, ZIP_PAYLOAD_LIMIT:128*1024*1024, normalizePeerId:String,
     TG:{hasDownloadManager:()=>true, im:()=>({chat:{managers:{appMessagesManager:{getMessagesByGroupedId:async()=>{groupCalls++;return album;}}}}})},
-    getMedia:m=>m?.media?.document || m?.media?.photo, renderActionButtons(){}, clearTimeout(){},
+    getMedia:m=>m?.media?.document || m?.media?.photo, renderActionButtons(){}, clearTimeout(){}, debug(){},
     pnlUpd(){}, sleep:async()=>{}, metaFromMsg:()=>({}), recordError(){},
     TelefilterVault:{recordDownload:async(p,m)=>records.push(m)},
     getMediaBytes:async(msg)=>{ scenario(S); return new Uint8Array([msg.id]); },

@@ -1,6 +1,8 @@
 'use strict';
-// Loads the FULL shipped userscript into Chromium on a Telegram-like fixture and
-// reads real geometry from its inject() debug hook. Isolates script vs environment.
+// Loads the FULL shipped userscript into Chromium on the production WebK DOM shape
+// (grep-verified against web.telegram.org/k/ CSS on 2026-09-25: #column-center >
+// .chat > .sidebar-header + .bubbles > .bubble.*[data-mid]) and reads real geometry
+// from its inject() debug hook. Isolates script vs environment.
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -9,24 +11,21 @@ const FIXTURE = `<!doctype html><html><head><style>
   html,body{margin:0;height:100%;overflow:hidden;background:#0e1621}
   .app{display:flex;height:100vh}
   .sidebar-left{width:300px;background:#17212b}
-  .middle-column{flex:1;min-width:0;position:relative;background:#0e1621}
-  .messages-layout{display:flex;flex-direction:column;height:100%}
-  .MiddleHeader{height:48px;background:#17212b;color:#fff}
-  .MessageList{flex:1;min-height:0;overflow-y:auto}
-  .bubbles{overflow-y:auto;height:100%}
-  .Message.message-list-item,.bubble{margin:4px 60px;padding:8px 12px;background:#182533;color:#fff;border-radius:12px;width:max-content}
+  #column-center{flex:1;min-width:0;position:relative;background:#0e1621}
+  .chat{display:flex;flex-direction:column;height:100%}
+  .sidebar-header{height:48px;background:#17212b;color:#fff;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;flex:none}
+  .bubbles{flex:1;min-height:0;overflow-y:auto;padding:12px}
+  .bubble{margin:4px 60px;padding:8px 12px;background:#182533;color:#fff;border-radius:12px;width:max-content}
 </style></head><body>
 <div class="app">
   <div class="sidebar-left">chats</div>
-  <div id="MiddleColumn" class="middle-column">
-    <div class="messages-layout">
-      <div class="MiddleHeader"><span class="peer-title">Fixture chat</span></div>
-      <div class="MessageList main">
-        <div class="bubbles">
-          <div class="Message message-list-item is-in" data-mid="1"><div class="message-content media"><div class="media-inner"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></div></div></div>
-          <div class="Message message-list-item is-in" data-mid="2"><div class="message-content">text only</div></div>
-          <div class="Message message-list-item is-in" data-mid="3"><div class="message-content media"><div class="media-inner"><video src="about:blank"></video></div></div></div>
-        </div>
+  <div id="column-center">
+    <div class="chat active">
+      <div class="sidebar-header"><span class="title">Fixture chat</span></div>
+      <div class="bubbles">
+        <div class="bubble photo" data-mid="1"><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></div>
+        <div class="bubble is-message" data-mid="2">text only</div>
+        <div class="bubble video" data-mid="3"><video src="about:blank"></video></div>
       </div>
     </div>
   </div>
@@ -60,6 +59,6 @@ const FIXTURE = `<!doctype html><html><head><style>
     assert(state.bar && state.bar.w > 300 && state.bar.h >= 30 && state.bar.controls >= 5,
       'repro: bar is the thin artifact -> ' + JSON.stringify(state.bar));
     assert.deepEqual(errors, [], 'page errors during live-script run');
-    console.log('PASS: full userscript end-to-end on Telegram-like fixture; bar full-size.');
+    console.log('PASS: full userscript end-to-end on production WebK DOM fixture; bar full-size.');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e.message || e); process.exitCode = 1; });

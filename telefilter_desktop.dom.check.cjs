@@ -19,16 +19,18 @@ function section(from, to) {
     const blocks = [section('  function parseColor(', '  let themeObserver'), section('  function ico(', '  const getMedia'), section('  function buildBar()', '  /* ─── INJECT & DOM WATCHER'), section('  function mountStyles()', '  /* ─── TEST HOOKS'), section('  function renderActionButtons()', '  async function downloadTargets'), section('  function pnl()', '  function mountDialog('), section('  function inject(', '  /* ─── LEAN 2-ACTION RIGHT-CLICK')];
     const filters = require('node:vm').runInNewContext(section('  const FILTERS =', '  const MEDIA_BUBBLE_SELECTOR_OLD') + ';FILTERS;');
     const shapes = {
-      newWebK: `<div id="MiddleColumn" style="width:1100px;height:600px;position:relative"><div class="messages-layout" style="display:flex;flex-direction:column;height:100%"><div class="MiddleHeader" style="height:48px;background:#212121">Header</div><div class="MessageList" style="flex:1;overflow:auto">Messages</div></div></div>`,
-      oldChat: `<div id="column-center" style="width:1100px;height:600px;position:relative"><div class="chat" style="display:flex;flex-direction:column;height:100%"><div class="chat-header" style="height:48px;background:#212121">Header</div><div class="bubbles" style="flex:1;overflow:auto"><div class="bubble">x</div></div></div></div>`,
-      noHeader: `<div class="column"><div class="chat" style="display:flex;flex-direction:column;height:600px"><div class="chat-header" style="height:48px;background:#212121">Header</div><div class="scrollable-y" style="flex:1;overflow:auto"><div class="bubble">x</div></div></div></div>`,
-      rowLayout: `<div id="MiddleColumn" style="width:1100px;height:600px;position:relative"><div class="messages-layout" style="display:flex;flex-direction:row;height:100%"><div class="MiddleHeader" style="height:48px;background:#212121">Header</div><div class="MessageList" style="flex:1;min-width:0;overflow:auto">Messages</div></div></div>`,
+      // Production WebK shapes (grep-verified 2026-09-25): #column-center > .chat
+      // > .sidebar-header + .bubbles[.scrollable-y]. MessageList/MiddleHeader live
+      // only in WebA and are intentionally not exercised here.
+      oldChat: `<div id="column-center" style="width:1100px;height:600px;position:relative"><div class="chat" style="display:flex;flex-direction:column;height:100%"><div class="sidebar-header" style="height:48px;background:#212121">Header</div><div class="bubbles" style="flex:1;overflow:auto"><div class="bubble">x</div></div></div></div>`,
+      emptyBubbles: `<div id="column-center" style="width:1100px;height:600px;position:relative"><div class="chat" style="display:flex;flex-direction:column;height:100%"><div class="sidebar-header" style="height:48px;background:#212121">Header</div><div class="bubbles" style="flex:1;overflow:auto"></div></div></div>`,
+      scrollableChat: `<div class="column"><div class="chat" style="display:flex;flex-direction:column;height:600px"><div class="sidebar-header" style="height:48px;background:#212121">Header</div><div class="scrollable-y" style="flex:1;overflow:auto"><div class="bubble">x</div></div></div></div>`,
     };
     for (const [name, html] of Object.entries(shapes)) {
       await page.setContent(`<!doctype html><html><body style="margin:0">${html}</body></html>`);
       await page.evaluate(({ blocks, filters }) => {
         const noop = () => {};
-        const S = { zipMode: false, batchRunning: false, fActive: new Set(), chatFilters: new Map(), fActivePeer: null, dlSession: new Set(), mediaCount: 0, catCounts: {}, panel: null, lastFailedTargets: [], expanded: false };
+        const S = { zipMode: false, batchRunning: false, fActive: new Set(), chatFilters: new Map(), fActivePeer: null, mediaCount: 0, catCounts: {}, panel: null, lastFailedTargets: [], expanded: false };
         let isNewWebKDOM = false;
         const env = { S, VERSION: 'test', FILTERS: filters, isNewWebKDOM: v => isNewWebKDOM = v, debug: noop, normalizePeerId: String, currentPeerId: () => '1',
           handleControlFeedback: noop, updateBadge: noop, saveScrollAnchor: noop, applyFilterState: noop, restoreScrollAnchor: noop, saveChatFilter: noop,
@@ -53,6 +55,6 @@ function section(from, to) {
       console.log(`PASS ${name}: bar ${state.width}x${Math.round(state.height)} in ${state.html}, ${state.controls} visible controls`);
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: inject() mounts a full-size bar on all three DOM shapes; 0 page errors.');
+    console.log('PASS: inject() mounts a full-size bar on all DOM shapes; 0 page errors.');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exitCode = 1; });
