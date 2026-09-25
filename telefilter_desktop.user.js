@@ -185,6 +185,9 @@
       ea84: '<path d="m12 3 3 6 6 1-4 5 1 6-6-3-6 3 1-6-4-5 6-1Z"/>',
       ea8f: '<path d="m15 14 5-5-5-5M4 20v-7a4 4 0 0 1 4-4h12"/>',
       ea8e: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+      ea8d: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/>',
+      e95c: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>',
+      e9aa: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
       e95d: '<path d="M18 6 6 18M6 6l12 12"/>',
       e994: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
       e973: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
@@ -1519,7 +1522,7 @@
     overlay.id = 'tf3-overlay';
     overlay.innerHTML = `<div class="tf3-card tf3-library-card" role="dialog" aria-modal="true" aria-labelledby="tf3-library-title">
       <div class="tf3-sh">
-        <div class="tf3-title-wrap"><span class="tf3-title-icon">&#128278;</span><span><strong id="tf3-library-title">Telefilter Workspace</strong><small>${S.bookmarks.length} bookmarks</small></span></div>
+        <div class="tf3-title-wrap"><span class="tf3-title-icon">${ico('ea8e').outerHTML}</span><span><strong id="tf3-library-title">Telefilter Workspace</strong><small>${S.bookmarks.length} bookmarks</small></span></div>
         <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
       </div>
       <div class="tf3-workspace-card"></div>
@@ -2195,7 +2198,7 @@
     const overlay = document.createElement('div');
     overlay.id = 'tf3-overlay';
     overlay.innerHTML = `<div class="tf3-card" role="dialog" aria-modal="true" aria-labelledby="tf3-errors-title">
-      <div class="tf3-sh"><div class="tf3-title-wrap"><span class="tf3-title-icon">!</span><span><strong id="tf3-errors-title">Recent Errors</strong><small>${S.errors.length} in this session</small></span></div><button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button></div>
+      <div class="tf3-sh"><div class="tf3-title-wrap"><span class="tf3-title-icon">${ico('e9aa').outerHTML}</span><span><strong id="tf3-errors-title">Recent Errors</strong><small>${S.errors.length} in this session</small></span></div><button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button></div>
       <div class="tf3-hl tf3-error-list"></div>
       <div class="tf3-dialog-actions"><button type="button" class="tf3-btn tf3-btn-danger tf3-error-clear">Clear</button><button type="button" class="tf3-btn tf3-btn-primary tf3-done">Done</button></div>
     </div>`;
@@ -2274,8 +2277,8 @@
         <div class="tf3-set-grid">
           <button type="button" class="tf3-history-link" id="tf3-open-library"><span>${ico('ea8e').outerHTML}</span><span><strong>Workspace</strong><small>${S.bookmarks.length} bookmarks</small></span><span class="tf3-chevron">›</span></button>
           <button type="button" class="tf3-history-link" id="tf3-show-history"><span>${ico('e95c').outerHTML}</span><span><strong>History</strong><small>${S.history.length} sessions</small></span><span class="tf3-chevron">›</span></button>
-          <button type="button" class="tf3-history-link" id="tf3-show-errors"><span>!</span><span><strong>Errors</strong><small>${S.errors.length} recent</small></span><span class="tf3-chevron">›</span></button>
-          <button type="button" class="tf3-history-link" id="tf3-clear-vault"><span>🗑️</span><span><strong>Clear Vault</strong><small>${S.downloadedVaultKeys.size} IDs cached</small></span><span class="tf3-chevron">›</span></button>
+          <button type="button" class="tf3-history-link" id="tf3-show-errors"><span>${ico('e9aa').outerHTML}</span><span><strong>Errors</strong><small>${S.errors.length} recent</small></span><span class="tf3-chevron">›</span></button>
+          <button type="button" class="tf3-history-link" id="tf3-clear-vault"><span>${ico('e973').outerHTML}</span><span><strong>Clear Vault</strong><small>${S.downloadedVaultKeys.size} IDs cached</small></span><span class="tf3-chevron">›</span></button>
         </div>
       </div>
 
@@ -3134,11 +3137,13 @@
     .tf3-title-wrap strong { font-size:14.5px; font-weight:700; letter-spacing:-0.01em; }
     .tf3-title-wrap small { margin-top:1px; color:var(--tf3-dialog-muted); font-size:11px; font-weight:450; }
     .tf3-title-icon { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; width:32px; height:32px; border-radius:8px; background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 12%,transparent); color:var(--theme-primary-color,#3390ec); font-size:16px; }
+    .tf3-title-icon svg { width:18px; height:18px; display:block; }
     .tf3-sx { flex:0 0 auto; margin:-3px -3px -3px 6px; }
 
     .tf3-history-link { box-sizing:border-box; width:100%; border:1px solid transparent; border-radius:10px; background:var(--tf3-dialog-soft); display:grid; grid-template-columns:28px minmax(0,1fr) auto; align-items:center; gap:10px; padding:10px 12px; color:var(--tf3-dialog-text); text-align:left; cursor:pointer; transition:background .12s,border-color .12s; }
     .tf3-history-link:hover { border-color:color-mix(in srgb,var(--theme-primary-color,#3390ec) 30%,transparent); background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 8%,var(--tf3-dialog-soft)); }
     .tf3-history-link > span:first-child { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; color:var(--theme-primary-color,#3390ec); background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 12%,transparent); }
+    .tf3-history-link > span:first-child svg { width:15px; height:15px; display:block; }
     .tf3-chevron { color:var(--tf3-dialog-muted); font-size:20px; line-height:1; }
 
     .tf3-settings-card { width: min(480px, 94vw); }
