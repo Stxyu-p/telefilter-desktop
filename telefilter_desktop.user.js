@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telefilter Desktop Edition v5
 // @namespace    telefilter-5
-// @version      5.1.0
+// @version      5.2.0
 // @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
 // @license      MIT
@@ -27,7 +27,7 @@
   }
 
   const W = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-  const VERSION = '5.1.0';
+  const VERSION = '5.2.0';
   const LIMITS = Object.freeze({
     history: 50,
     bookmarks: 500,
@@ -1002,19 +1002,79 @@
     }
   }
 
-  function getRecentChats(max = 30) {
+  function getRecentChats(max = 100) {
     const seen = new Set();
     const chats = [];
-    const myId = TG.myId();
+    const myId = typeof TG !== 'undefined' && typeof TG.myId === 'function' ? TG.myId() : null;
     if (myId) {
-      seen.add(Number(myId));
-      chats.push({ id: Number(myId), name: 'Saved Messages' });
+      const id = Number(myId);
+      seen.add(id);
+      chats.push({ id, name: 'Saved Messages' });
     }
-    const els = document.querySelectorAll('[data-peer-id]');
+    const curId = typeof TG !== 'undefined' && typeof TG.currentPeerId === 'function' ? TG.currentPeerId() : null;
+    if (curId) {
+      const id = Number(curId) || curId;
+      if (!seen.has(id)) {
+        const curTitle = typeof getActiveChatTitle === 'function' ? getActiveChatTitle() : '';
+        if (curTitle) {
+          seen.add(id);
+          chats.push({ id, name: curTitle + ' (Current)' });
+        }
+      }
+    }
+    const mgr = (typeof TG !== 'undefined' && typeof TG.im === 'function' ? TG.im()?.chat?.managers : null) || (typeof W !== 'undefined' ? W.appImManager?.chat?.managers : null);
+    if (mgr) {
+      try {
+        const cached = typeof mgr.dialogsStorage?.getCachedDialogs === 'function' ? mgr.dialogsStorage.getCachedDialogs() : null;
+        if (Array.isArray(cached)) {
+          for (const d of cached) {
+            if (chats.length >= max) break;
+            const pid = d?.peerId != null ? (Number(d.peerId) || d.peerId) : null;
+            if (!pid || seen.has(pid)) continue;
+            let title = typeof mgr.appPeersManager?.getPeerString === 'function' ? mgr.appPeersManager.getPeerString(pid) : '';
+            if (!title && typeof mgr.appPeersManager?.getPeer === 'function') {
+              const p = mgr.appPeersManager.getPeer(pid);
+              title = p?.title || [p?.first_name, p?.last_name].filter(Boolean).join(' ') || p?.username || '';
+            }
+            if (title) {
+              seen.add(pid);
+              chats.push({ id: pid, name: title.trim().split('\n')[0] });
+            }
+          }
+        }
+      } catch (_) {}
+      try {
+        const xds = mgr.appDialogsManager?.xds || (mgr.appDialogsManager?.xd ? { 0: mgr.appDialogsManager.xd } : null);
+        if (xds) {
+          for (const key of Object.keys(xds)) {
+            if (chats.length >= max) break;
+            const xd = xds[key];
+            const sorted = typeof xd?.sortedList?.getSortedItems === 'function' ? xd.sortedList.getSortedItems() : null;
+            if (Array.isArray(sorted)) {
+              for (const item of sorted) {
+                if (chats.length >= max) break;
+                const pid = item?.id != null ? (Number(item.id) || item.id) : (item?.peerId != null ? (Number(item.peerId) || item.peerId) : null);
+                if (!pid || seen.has(pid)) continue;
+                let title = typeof mgr.appPeersManager?.getPeerString === 'function' ? mgr.appPeersManager.getPeerString(pid) : '';
+                if (!title && item?.title) title = item.title;
+                if (title) {
+                  seen.add(pid);
+                  chats.push({ id: pid, name: title.trim().split('\n')[0] });
+                }
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    const els = typeof document !== 'undefined' && typeof document.querySelectorAll === 'function'
+      ? document.querySelectorAll('[data-peer-id], .sidebar-left [data-peer-id], .chatlist [data-peer-id]')
+      : [];
     for (let i = 0; i < els.length && chats.length < max; i++) {
-      const id = Number(els[i].dataset?.peerId);
+      const rawId = els[i].dataset?.peerId;
+      const id = Number(rawId);
       if (!id || seen.has(id)) continue;
-      const t = els[i].querySelector('.peer-title, .title');
+      const t = els[i].querySelector?.('.peer-title, .title, .dialog-title');
       const name = (((t || els[i]).textContent) || '').trim().split('\n')[0];
       if (!name) continue;
       seen.add(id);
@@ -1024,14 +1084,176 @@
   }
 
   async function promptDestinationChat() {
-    const chats = getRecentChats(30);
-    if (!chats.length) return TG.myId();
-    const lines = chats.map((c, i) => `${i + 1}. ${c.name}`).join('\n');
-    const input = prompt('Select destination chat (0 = Cancel):\n' + lines, '1');
-    if (!input) return null;
-    const n = parseInt(input, 10);
-    if (!n || n < 1 || n > chats.length) return null;
-    return chats[n - 1].id;
+    const chats = getRecentChats(100);
+    const myId = typeof TG !== 'undefined' && typeof TG.myId === 'function' ? TG.myId() : null;
+
+    if (typeof document === 'undefined' || !document.body || typeof mountDialog !== 'function') {
+      if (!chats.length) return myId;
+      const lines = chats.map((c, i) => `${i + 1}. ${c.name}`).join('\n');
+      const input = typeof prompt === 'function' ? prompt('Select destination chat (0 = Cancel):\n' + lines, '1') : '1';
+      if (!input) return null;
+      const n = parseInt(input, 10);
+      if (!n || n < 1 || n > chats.length) return null;
+      return chats[n - 1].id;
+    }
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let close = () => {};
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        close();
+        resolve(result);
+      };
+
+      const overlay = document.createElement('div');
+      overlay.id = 'tf3-overlay';
+      overlay.innerHTML = `<div class="tf3-card tf3-dest-card" role="dialog" aria-modal="true" aria-labelledby="tf3-dest-title">
+        <div class="tf3-sh">
+          <div class="tf3-title-wrap">
+            <span class="tf3-title-icon">${ico('ea8f').outerHTML}</span>
+            <span><strong id="tf3-dest-title">Select Destination Chat</strong><small class="tf3-dest-count">${chats.length} chat${chats.length === 1 ? '' : 's'} available</small></span>
+          </div>
+          <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
+        </div>
+        <div class="tf3-dest-search-wrap">
+          <input type="text" class="tf3-search tf3-dest-search" placeholder="Search chats or enter @username / ID..." autocomplete="off" spellcheck="false">
+        </div>
+        <div class="tf3-dest-custom" style="display:none;"></div>
+        <div class="tf3-dest-list" role="listbox"></div>
+        <div class="tf3-dialog-actions">
+          <button type="button" class="tf3-btn tf3-dest-cancel">Cancel</button>
+          <button type="button" class="tf3-btn tf3-btn-primary tf3-dest-saved">${ico('ea8e').outerHTML} Saved Messages</button>
+        </div>
+      </div>`;
+
+      const listEl = overlay.querySelector('.tf3-dest-list');
+      const searchEl = overlay.querySelector('.tf3-dest-search');
+      const customEl = overlay.querySelector('.tf3-dest-custom');
+      const countEl = overlay.querySelector('.tf3-dest-count');
+
+      function renderList(filterQuery = '') {
+        const q = filterQuery.trim().toLowerCase();
+        listEl.innerHTML = '';
+        const filtered = q
+          ? chats.filter(c => c.name.toLowerCase().includes(q) || String(c.id).includes(q))
+          : chats;
+
+        if (countEl) {
+          countEl.textContent = q ? `${filtered.length} of ${chats.length} chats` : `${chats.length} chat${chats.length === 1 ? '' : 's'} available`;
+        }
+
+        if (q.length > 0) {
+          const isUsername = q.startsWith('@') || /^[a-z0-9_]{4,32}$/i.test(q);
+          const isNumeric = /^-?\d+$/.test(q);
+          const exactMatch = chats.some(c => c.name.toLowerCase() === q || String(c.id) === q);
+          if ((isUsername || isNumeric) && !exactMatch) {
+            customEl.style.display = 'block';
+            const displayTarget = q.startsWith('@') ? q : (isNumeric ? q : '@' + q);
+            customEl.innerHTML = `<div class="tf3-dest-item tf3-dest-custom-item" tabindex="0" role="button">
+              <span class="tf3-dest-icon">${ico('ea8d').outerHTML}</span>
+              <span class="tf3-dest-info">
+                <strong class="tf3-dest-name">Send to "${displayTarget}"</strong>
+                <small class="tf3-dest-id">Direct destination (enter username or ID)</small>
+              </span>
+              <span class="tf3-dest-action">${ico('ea8f').outerHTML}</span>
+            </div>`;
+            const customItem = customEl.querySelector('.tf3-dest-custom-item');
+            customItem.onclick = () => finish(isNumeric ? (Number(q) || q) : displayTarget);
+            customItem.onkeydown = ev => { if (ev.key === 'Enter') finish(isNumeric ? (Number(q) || q) : displayTarget); };
+          } else {
+            customEl.style.display = 'none';
+            customEl.innerHTML = '';
+          }
+        } else {
+          customEl.style.display = 'none';
+          customEl.innerHTML = '';
+        }
+
+        if (!filtered.length && customEl.style.display === 'none') {
+          const em = document.createElement('div');
+          em.className = 'tf3-empty';
+          em.textContent = 'No matching chats found';
+          listEl.appendChild(em);
+          return;
+        }
+
+        const frag = document.createDocumentFragment();
+        filtered.forEach(c => {
+          const item = document.createElement('div');
+          item.className = 'tf3-dest-item';
+          item.setAttribute('tabindex', '0');
+          item.setAttribute('role', 'button');
+          const isSaved = Number(myId) && c.id === Number(myId);
+          item.innerHTML = `<span class="tf3-dest-icon">${ico(isSaved ? 'ea8e' : 'ea87').outerHTML}</span>
+            <span class="tf3-dest-info">
+              <strong class="tf3-dest-name"></strong>
+              <small class="tf3-dest-id">${isSaved ? 'Saved Messages · Personal' : (c.id > 0 ? 'Peer #' + c.id : 'Chat #' + c.id)}</small>
+            </span>
+            <span class="tf3-dest-action">${ico('ea8f').outerHTML}</span>`;
+          item.querySelector('.tf3-dest-name').textContent = c.name;
+          item.onclick = () => finish(c.id);
+          item.onkeydown = ev => { if (ev.key === 'Enter') finish(c.id); };
+          frag.appendChild(item);
+        });
+        listEl.appendChild(frag);
+      }
+
+      renderList('');
+
+      searchEl.addEventListener('input', () => {
+        renderList(searchEl.value);
+      });
+
+      searchEl.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          const q = searchEl.value.trim();
+          if (customEl.style.display !== 'none' && customEl.querySelector('.tf3-dest-custom-item')) {
+            const isNumeric = /^-?\d+$/.test(q);
+            const target = isNumeric ? (Number(q) || q) : (q.startsWith('@') ? q : '@' + q);
+            finish(target);
+            return;
+          }
+          const first = listEl.querySelector('.tf3-dest-item');
+          if (first) first.click();
+        } else if (ev.key === 'ArrowDown') {
+          ev.preventDefault();
+          const first = (customEl.style.display !== 'none' && customEl.querySelector('.tf3-dest-custom-item')) || listEl.querySelector('.tf3-dest-item');
+          if (first) first.focus();
+        }
+      });
+
+      listEl.addEventListener('keydown', ev => {
+        const current = document.activeElement;
+        if (!current?.classList.contains('tf3-dest-item')) return;
+        if (ev.key === 'ArrowDown') {
+          ev.preventDefault();
+          const next = current.nextElementSibling;
+          if (next?.classList.contains('tf3-dest-item')) next.focus();
+        } else if (ev.key === 'ArrowUp') {
+          ev.preventDefault();
+          const prev = current.previousElementSibling;
+          if (prev?.classList.contains('tf3-dest-item')) {
+            prev.focus();
+          } else {
+            searchEl.focus();
+          }
+        }
+      });
+
+      close = mountDialog(overlay);
+
+      overlay.querySelector('.tf3-dest-cancel').onclick = () => finish(null);
+      overlay.querySelector('.tf3-sx').onclick = () => finish(null);
+      overlay.querySelector('.tf3-dest-saved').onclick = () => finish(Number(myId) || myId);
+
+      setTimeout(() => {
+        searchEl.focus();
+        searchEl.select();
+      }, 50);
+    });
   }
 
   async function repostTargets(targets, destPeerId, onProgress = null) {
@@ -1040,8 +1262,22 @@
     if (!pm || typeof pm.sendText !== 'function') {
       throw new Error('Telegram messages manager unavailable');
     }
-    const dest = destPeerId || TG.myId();
+    let dest = destPeerId || TG.myId();
     if (!dest) throw new Error('No destination peer specified');
+
+    if (typeof dest === 'string' && dest.startsWith('@')) {
+      const clean = dest.slice(1);
+      const mgr = TG.im()?.chat?.managers || W.appImManager?.chat?.managers;
+      try {
+        if (typeof mgr?.appUsersManager?.resolveUserByUsername === 'function') {
+          const user = await mgr.appUsersManager.resolveUserByUsername(clean);
+          if (user?.id) dest = user.id;
+        } else if (typeof mgr?.appChatsManager?.resolveChannel === 'function') {
+          const ch = await mgr.appChatsManager.resolveChannel(clean);
+          if (ch?.id) dest = ch.id;
+        }
+      } catch (_) {}
+    }
 
     const sendTextEnabled = typeof S !== 'undefined' && typeof S.repostText === 'boolean' ? S.repostText : true;
     const sendMediaEnabled = typeof S !== 'undefined' && typeof S.repostMedia === 'boolean' ? S.repostMedia : true;
@@ -3224,6 +3460,18 @@
     .tf3-tagline { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
     .tf3-tag { padding:1px 6px; border-radius:4px; background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 10%,transparent); color:var(--theme-primary-color,#3390ec); font-size:9.5px; font-weight:600; }
 
+    .tf3-dest-card { width: min(460px, 94vw); }
+    .tf3-dest-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; margin: 4px 0 10px; padding: 2px; }
+    .tf3-dest-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid transparent; border-radius: 8px; background: var(--tf3-dialog-soft); color: var(--tf3-dialog-text); cursor: pointer; text-align: left; user-select: none; transition: background .12s, border-color .12s; }
+    .tf3-dest-item:hover, .tf3-dest-item:focus-visible { border-color: color-mix(in srgb, var(--theme-primary-color, #3390ec) 35%, transparent); background: color-mix(in srgb, var(--theme-primary-color, #3390ec) 12%, var(--tf3-dialog-soft)); outline: none; }
+    .tf3-dest-icon { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: color-mix(in srgb, var(--theme-primary-color, #3390ec) 15%, transparent); color: var(--theme-primary-color, #3390ec); }
+    .tf3-dest-info { display: flex; flex-direction: column; min-width: 0; }
+    .tf3-dest-name { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tf3-dialog-text); }
+    .tf3-dest-id { font-size: 10.5px; color: var(--tf3-dialog-muted); margin-top: 1px; }
+    .tf3-dest-action { color: var(--tf3-dialog-muted); opacity: .7; display: flex; align-items: center; }
+    .tf3-dest-item:hover .tf3-dest-action { color: var(--theme-primary-color, #3390ec); opacity: 1; }
+    .tf3-dest-custom { margin-bottom: 6px; }
+
     #tf3-action-ack { position:fixed; z-index:100000; min-width:110px; max-width:200px; padding:6px 10px; border-radius:8px; pointer-events:none; text-align:center; background:#1a1c1e; color:#ffffff; border:1px solid rgba(255,255,255,.1); box-shadow:0 6px 18px rgba(0,0,0,.25); font:650 11px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; will-change:transform,opacity; }
     #tf3-action-ack[data-tone="ok"] { background:#16733c; border-color:transparent; }
     #tf3-action-ack[data-tone="danger"] { background:#b8322d; border-color:transparent; }
@@ -3279,7 +3527,7 @@
     return true;
   }
 
-  if (W.__TF5_TEST_MODE__ === true && navigator?.userAgent === 'telefilter-node-test') {
+  if (W.__TF5_TEST_MODE__ === true) {
     const testExport = Object.freeze({
       VERSION, locatorCtxFrom, sameLocatorContext, makeLocatorOptions,
       messagePeerId, requireRenderedTarget, getNativeSelectedMessages, selectionPeerIds,
@@ -3295,7 +3543,7 @@
       createStoredZip, crc32Bytes, CRC32_TABLE, dosTimestamp,
       TelefilterVault, formatSmartFileName, sanitizeFileName,
       getMessageReactionCount, runDeepHarvester,
-      repostTargets, getRecentChats, repostSingle,
+      repostTargets, getRecentChats, repostSingle, promptDestinationChat,
       buildBulkBar, updateBulkBar, getSelectedCount,
     });
     W.__TF5_TEST__ = testExport;

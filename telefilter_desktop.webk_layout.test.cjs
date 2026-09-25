@@ -61,7 +61,13 @@ const FIXTURE_WEBK = `<!doctype html>
 </html>`;
 
 (async () => {
-  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
+  const defaultChrome = [
+    process.env.CHROMIUM_PATH,
+    'C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    'C:/Users/BlankScreen/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe'
+  ].find(p => p && fs.existsSync(p));
+  const browser = await chromium.launch({ headless: true, ...(defaultChrome ? { executablePath: defaultChrome } : {}) });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     await page.route('**/k/', route => route.fulfill({ contentType: 'text/html', body: FIXTURE_WEBK }));

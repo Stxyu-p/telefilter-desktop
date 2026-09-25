@@ -1,15 +1,15 @@
 <div align="center">
 
-# ⚡ Telefilter Desktop <sub>v5.1.0</sub>
+# ⚡ Telefilter Desktop <sub>v5.2.0</sub>
 
 **Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
-*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Selective Repost System · Mixed-Album ZIP32 Engine*  
+*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Selective Repost System · Searchable Destination Picker · Mixed-Album ZIP32 Engine*  
 *Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
-[![Release: v5.1.0](https://img.shields.io/badge/Release-v5.1.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Release: v5.2.0](https://img.shields.io/badge/Release-v5.2.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -21,7 +21,7 @@
 <br/>
 
 <p align="center">
-  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.1.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
+  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.2.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
 </p>
 
 </div>
@@ -71,7 +71,21 @@ Access advanced configuration anytime via the toolbar's `…` menu. Everything i
 
 ---
 
-### 4. Telefilter Workspace Library & Message Locator
+### 4. Searchable Destination Chat Picker
+Alt-click `Repost` (or hold Alt and click the bulk bar repost button) to open the in-app destination picker — no browser prompts, no guessing.
+
+<p align="center">
+  <img src="assets/panel-destination-chat.png" alt="Searchable Destination Chat Picker" width="60%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
+</p>
+
+- **Searches up to 100 chats** from Telegram's in-memory dialog storage — shows chats beyond the visible list.
+- **Type to filter** by name, or enter `@username` / a numeric peer ID to send to any chat directly.
+- **Keyboard navigable:** Arrow keys + Enter to select; Escape to cancel.
+- **Saved Messages shortcut** always available at the bottom for quick personal saves.
+
+---
+
+### 5. Telefilter Workspace Library & Message Locator
 An offline-first personal catalog of bookmarked messages and assets, stored strictly inside your browser.
 
 <p align="center">
@@ -84,7 +98,7 @@ An offline-first personal catalog of bookmarked messages and assets, stored stri
 
 ---
 
-### 5. In-Memory Streaming ZIP32 Engine & Live Progress
+### 6. In-Memory Streaming ZIP32 Engine & Live Progress
 When downloading albums or batches as a `.zip` archive, Telefilter compiles media in-memory using a pure client-side binary generator.
 
 <p align="center">
@@ -103,6 +117,7 @@ When downloading albums or batches as a `.zip` archive, Telefilter compiles medi
 | :--- | :---: | :--- | :--- |
 | **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
 | **Floating Bulk Dock** | ⚓ | Ergonomic bottom dock for batch actions upon selecting chat messages. | Eliminates context menu interference; zero event hijacking. |
+| **Destination Chat Picker** | 🔍 | Searchable in-app modal listing up to 100 chats; supports @username and peer ID entry. | Queries Telegram's in-memory dialog storage — shows all chats, not just visible ones. |
 | **Selective Repost** | ↗️ | Configurable repost engine: forward text only, media only, or both. | Respects user preferences in settings; native Telegram bridge. |
 | **Mixed-Album ZIP Engine** | 📦 | Compiles multi-item mixed photo/video albums into an organized **.zip archive**. | Built-in ZIP32 compiler; unpacks grouped albums automatically. |
 | **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
@@ -139,7 +154,7 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 ### Option A: Greasy Fork (Recommended · Auto-Updating)
 1. Install [Tampermonkey](https://www.tampermonkey.net/) (or Violentmonkey) in your browser.
 2. Click to install directly:  
-   👉 **[Install from Greasy Fork (v5.1.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
+   👉 **[Install from Greasy Fork (v5.2.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
 3. Tampermonkey will prompt you to confirm. Click **Install**.
 4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
 
@@ -160,7 +175,7 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 The repository includes comprehensive unit, regression, DOM fixture, and headless browser tests:
 
 ```bash
-# 1. Complete test suite (Node syntax check, 18 regression tests, static contract smoke test)
+# 1. Complete test suite (Node syntax check, 20 regression tests, static contract smoke test)
 npm test
 
 # 2. Headless Chromium browser layout & DOM tests across 8 viewport configurations
@@ -178,7 +193,7 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE)
 
 <div align="center">
 
-**Telefilter Desktop** <sub>v5.1.0</sub> · Built for Precision & Reliability  
+**Telefilter Desktop** <sub>v5.2.0</sub> · Built for Precision & Reliability  
 *Clean Minimal Precision · High Taste · Zero Slop*
 
 </div>

@@ -203,6 +203,61 @@ test('getRecentChats parses peer elements and deduplicates', ()=>{
     { id: 456, name: 'Chat Two' }
   ]);
 });
+test('getRecentChats queries dialogsStorage and appPeersManager when available', ()=>{
+  const ctx = {
+    TG: {
+      myId: () => 5691312344,
+      currentPeerId: () => 9999,
+      im: () => ({
+        chat: {
+          managers: {
+            dialogsStorage: {
+              getCachedDialogs: () => [{ peerId: 777 }, { peerId: 888 }, { peerId: 5691312344 }]
+            },
+            appPeersManager: {
+              getPeerString: (id) => id === 777 ? 'Alpha Channel' : (id === 888 ? 'Beta Group' : '')
+            }
+          }
+        }
+      })
+    },
+    getActiveChatTitle: () => 'Main Discussion',
+    document: {
+      querySelectorAll: () => [
+        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One' }) }
+      ]
+    }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  function getRecentChats(', '  async function promptDestinationChat(') + ';this.run=getRecentChats;', ctx);
+  const chats = ctx.run(20);
+  assert.equal(chats.length, 5);
+  assert.deepEqual(JSON.parse(JSON.stringify(chats)), [
+    { id: 5691312344, name: 'Saved Messages' },
+    { id: 9999, name: 'Main Discussion (Current)' },
+    { id: 777, name: 'Alpha Channel' },
+    { id: 888, name: 'Beta Group' },
+    { id: 123, name: 'Chat One' }
+  ]);
+});
+test('promptDestinationChat handles cancel and selection in fallback mode', async ()=>{
+  const ctx = {
+    getRecentChats: () => [
+      { id: 5691312344, name: 'Saved Messages' },
+      { id: 777, name: 'Alpha Channel' }
+    ],
+    TG: { myId: () => 5691312344 },
+    prompt: (msg, def) => '2'
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  async function promptDestinationChat(', '  async function repostTargets(') + ';this.run=promptDestinationChat;', ctx);
+  const picked = await ctx.run();
+  assert.equal(picked, 777);
+
+  ctx.prompt = () => '0';
+  const cancelled = await ctx.run();
+  assert.equal(cancelled, null);
+});
 test('buildBulkBar creates floating bulk bar elements', ()=>{
   const elements = [];
   const makeEl = (tag) => {

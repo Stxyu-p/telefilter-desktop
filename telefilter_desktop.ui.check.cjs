@@ -10,8 +10,15 @@ function section(from, to) {
   assert(start >= 0 && end > start, `Missing section: ${from}`);
   return source.slice(start, end);
 }
+const defaultChrome = [
+  process.env.CHROMIUM_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  'C:/Users/BlankScreen/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe'
+].find(p => p && fs.existsSync(p));
+
 (async () => {
-  const browser = await chromium.launch({headless:true, ...(process.env.CHROMIUM_PATH ? {executablePath:process.env.CHROMIUM_PATH} : {})});
+  const browser = await chromium.launch({headless:true, ...(defaultChrome ? {executablePath:defaultChrome} : {})});
   try {
     const page = await browser.newPage();
     const errors = [];

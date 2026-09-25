@@ -5,6 +5,7 @@
 // from its inject() debug hook. Isolates script vs environment.
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 const FIXTURE = `<!doctype html><html><head><style>
@@ -32,8 +33,15 @@ const FIXTURE = `<!doctype html><html><head><style>
 </div>
 </body></html>`;
 
+const defaultChrome = [
+  process.env.CHROMIUM_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  'C:/Users/BlankScreen/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe'
+].find(p => p && fs.existsSync(p));
+
 (async () => {
-  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
+  const browser = await chromium.launch({ headless: true, ...(defaultChrome ? { executablePath: defaultChrome } : {}) });
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const errors = [], infos = [];

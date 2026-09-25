@@ -3,7 +3,12 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
-const CHROMIUM_PATH = process.env.CHROMIUM_PATH || 'C:/Users/BlankScreen/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe';
+const CHROMIUM_PATH = [
+  process.env.CHROMIUM_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  'C:/Users/BlankScreen/AppData/Local/ms-playwright/chromium-1234/chrome-win64/chrome.exe'
+].find(p => p && fs.existsSync(p));
 
 const FIXTURE_HTML = `<!doctype html>
 <html lang="en">
@@ -265,6 +270,9 @@ const FIXTURE_HTML = `<!doctype html>
       localStorage.setItem('tf3', JSON.stringify(state));
     });
 
+    // Activate test hook before injecting userscript
+    await page.evaluate(() => { window.__TF5_TEST_MODE__ = true; });
+
     // Inject userscript
     await page.addScriptTag({ path: path.join(__dirname, 'telefilter_desktop.user.js') });
     await page.waitForSelector('.tf3-ctrl', { timeout: 5000 });
@@ -370,6 +378,27 @@ const FIXTURE_HTML = `<!doctype html>
       });
       console.log('✔ Captured assets/panel-download.png');
     }
+
+    // Capture 7: Destination Chat Picker Modal
+    console.log('[Capture] 7. Capturing Destination Chat Picker Modal...');
+    await page.evaluate(() => {
+      // Call directly via test hook — avoids needing active TG selection
+      if (window.__TF5_TEST__?.promptDestinationChat) {
+        window.__TF5_TEST__.promptDestinationChat(); // intentionally fire-and-forget; modal stays open
+      }
+    });
+    await page.waitForSelector('#tf3-overlay .tf3-dest-card', { timeout: 5000 });
+    const destCard = await page.$('#tf3-overlay .tf3-dest-card');
+    if (destCard) {
+      await destCard.screenshot({
+        path: path.join(assetsDir, 'panel-destination-chat.png'),
+      });
+      console.log('✔ Captured assets/panel-destination-chat.png');
+    }
+    // close the modal
+    const cancelBtn = await page.$('#tf3-overlay .tf3-dest-cancel');
+    if (cancelBtn) await cancelBtn.click();
+    await page.waitForTimeout(200);
 
     console.log('🎉 All panels captured successfully!');
   } finally {
