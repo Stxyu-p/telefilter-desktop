@@ -8,6 +8,7 @@
 *Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Install from OpenUserJS](https://img.shields.io/badge/Install-OpenUserJS-e65c00?style=for-the-badge&logo=javascript&logoColor=white)](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
 [![Release: v5.2.0](https://img.shields.io/badge/Release-v5.2.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
@@ -158,12 +159,18 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 3. Tampermonkey will prompt you to confirm. Click **Install**.
 4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
 
-### Option B: One-Click Direct Install (GitHub RAW)
+### Option B: OpenUserJS
+1. Install [Tampermonkey](https://www.tampermonkey.net/) (or Violentmonkey) in your browser.
+2. Click to install directly:  
+   👉 **[Install from OpenUserJS](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)**
+3. Confirm the installation in Tampermonkey.
+
+### Option C: One-Click Direct Install (GitHub RAW)
 1. Click the raw distribution link:  
    👉 **[Install via GitHub RAW](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
 2. Confirm the installation in Tampermonkey.
 
-### Option C: Manual Setup
+### Option D: Manual Setup
 1. Copy the source code from [`telefilter_desktop.user.js`](telefilter_desktop.user.js).
 2. In Tampermonkey Dashboard, click **Add a new script (+)**.
 3. Paste the code and save (**Ctrl + S** / **Cmd + S**).
