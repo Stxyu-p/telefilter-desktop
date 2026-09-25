@@ -48,7 +48,7 @@ test('single download reports missing, failed, and successful outcomes honestly'
     lookupMsg:async()=>msg, dlSingleShot:async()=>success,
     TelefilterVault:{recordDownload:async()=>writes++},metaFromMsg:()=>({}),recordError(){}};
   vm.createContext(ctx);
-  vm.runInContext(section('  async function dlSingle(', '  /* ─── LAZY-LOAD REFRESH')+';this.run=dlSingle;',ctx);
+  vm.runInContext(section('  async function dlSingle(', '  function forceRefreshLazyMedia(')+';this.run=dlSingle;',ctx);
   assert.equal(await ctx.run('1','2'),false);assert.equal(writes,0);
   msg={id:2};assert.equal(await ctx.run('1','2'),false);assert.equal(writes,0);
   success=true;assert.equal(await ctx.run('1','2'),true);assert.equal(writes,1);
@@ -84,7 +84,7 @@ test('ZIP bytes use native Blob API, choose full photo, and enforce byte budget'
   const ctx={Uint8Array,TG:{hasDownloadManager:()=>false},findBubbleByMid:()=>null,S:{panelCancel:false},getMedia:m=>m.media,
     W:{appDownloadManager:{downloadMedia:async(o,type)=>{calls++;options=o;assert.equal(type,'blob');return new Blob(['abc']);}}}};
   vm.createContext(ctx);
-  vm.runInContext(section('  async function getMediaBytes(', '  /* ─── STORAGE SYSTEM')+';this.run=getMediaBytes;',ctx);
+  vm.runInContext(section('  async function getMediaBytes(', '  const FILTER_MEM_KEY')+';this.run=getMediaBytes;',ctx);
   assert.deepEqual(Array.from(await ctx.run({media},3)),[97,98,99]);
   assert.equal(options.media,media);assert.equal(options.thumb,thumb);
   await assert.rejects(ctx.run({media},2),/ZIP.*limit/);assert.equal(calls,1);
@@ -94,7 +94,7 @@ test('ZIP refuses unknown-size documents and never captures page downloads',asyn
   const ctx={Uint8Array,TG:{hasDownloadManager:()=>false},findBubbleByMid:()=>null,S:{panelCancel:false},getMedia:m=>m.media,
     W:{appDownloadManager:{downloadMedia(){throw Error('must not download');}}}};
   vm.createContext(ctx);
-  vm.runInContext(section('  async function getMediaBytes(', '  /* ─── STORAGE SYSTEM')+';this.run=getMediaBytes;',ctx);
+  vm.runInContext(section('  async function getMediaBytes(', '  const FILTER_MEM_KEY')+';this.run=getMediaBytes;',ctx);
   await assert.rejects(ctx.run({media:{_: 'document'}},4),/size/);
   assert(!source.includes('HTMLAnchorElement.prototype.click ='));
 });
@@ -157,3 +157,90 @@ test('ZIP mode is frozen for the running batch', async()=>{
   assert.equal(r.records.length,1);
   assert.equal(r.result.ok,1);
 });
+test('repostTargets sends text messages and reports counts', async()=>{
+  const sentTexts = [];
+  const ctx = {
+    TG: {
+      repostManager: () => ({
+        sendText: async ({ peerId, text }) => { sentTexts.push({ peerId, text }); },
+        sendFile: async () => {},
+      }),
+      myId: () => '5691312344',
+    },
+    findBubbleByMid: () => null,
+    document: { querySelector: () => null },
+    recordError() {},
+    sleep: async () => {},
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  async function repostTargets(', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
+  const res = await ctx.run([{ mid: '101', message: 'Hello repost' }, { mid: '102', message: 'Second message' }], '9999');
+  assert.equal(res.ok, 2);
+  assert.equal(res.fail, 0);
+  assert.equal(sentTexts.length, 2);
+  assert.equal(sentTexts[0].peerId, '9999');
+  assert.equal(sentTexts[0].text, '[Repost] Hello repost');
+});
+test('getRecentChats parses peer elements and deduplicates', ()=>{
+  const ctx = {
+    TG: { myId: () => 5691312344 },
+    document: {
+      querySelectorAll: () => [
+        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One\nUnread' }) },
+        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One Duplicate' }) },
+        { dataset: { peerId: '456' }, querySelector: () => null, textContent: 'Chat Two' },
+        { dataset: {}, querySelector: () => null },
+      ]
+    }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  function getRecentChats(', '  async function promptDestinationChat(') + ';this.run=getRecentChats;', ctx);
+  const chats = ctx.run(10);
+  assert.equal(chats.length, 3);
+  assert.deepEqual(JSON.parse(JSON.stringify(chats)), [
+    { id: 5691312344, name: 'Saved Messages' },
+    { id: 123, name: 'Chat One' },
+    { id: 456, name: 'Chat Two' }
+  ]);
+});
+test('buildBulkBar creates floating bulk bar elements', ()=>{
+  const elements = [];
+  const makeEl = (tag) => {
+    const el = {
+      tagName: tag.toUpperCase(),
+      id: '',
+      className: '',
+      children: [],
+      classList: {
+        add: (c) => { el.className += ' ' + c; },
+        remove: (c) => { el.className = el.className.replace(c, '').trim(); },
+        contains: (c) => el.className.includes(c),
+      },
+      append: (...args) => el.children.push(...args),
+      appendChild: (c) => el.children.push(c),
+      querySelector: (sel) => el.children.find(c => c.id === sel.replace('#', '') || c.className?.includes(sel.replace('.', ''))),
+    };
+    elements.push(el);
+    return el;
+  };
+  const ctx = {
+    document: {
+      getElementById: (id) => elements.find(e => e.id === id) || null,
+      createElement: makeEl,
+      querySelectorAll: () => [],
+    },
+    ico: () => makeEl('svg'),
+    S: { zipMode: false, batchRunning: false },
+    downloadNativeSelection() {},
+    handleRepostSelection() {},
+    saveStorage() {},
+    renderActionButtons() {},
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  function buildBulkBar(', '  function inject(') + ';this.run=buildBulkBar;', ctx);
+  const bar = ctx.run();
+  assert.equal(bar.id, 'tf5-bulk-bar');
+  assert(bar.className.includes('tf5-bulk-bar'));
+});
+
+

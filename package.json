@@ -1,11 +1,12 @@
 {
   "name": "telefilter-desktop",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "private": true,
   "description": "Telefilter Desktop Edition v5 userscript — test harness",
   "scripts": {
     "test": "node --check telefilter_desktop.user.js && node --test telefilter_desktop.regression.test.js && node telefilter_desktop.smoke.test.js",
-    "test:browser": "node telefilter_desktop.ui.check.cjs && node telefilter_desktop.webk_layout.test.cjs && node telefilter_desktop.dom.check.cjs && node telefilter_desktop.live.check.cjs"
+    "test:browser": "node telefilter_desktop.ui.check.cjs && node telefilter_desktop.webk_layout.test.cjs && node telefilter_desktop.dom.check.cjs && node telefilter_desktop.live.check.cjs",
+    "capture:panels": "node capture_panels.cjs"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

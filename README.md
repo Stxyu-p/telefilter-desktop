@@ -1,15 +1,15 @@
 <div align="center">
 
-# ⚡ Telefilter Desktop <sub>v5.0.0</sub>
+# ⚡ Telefilter Desktop <sub>v5.1.0</sub>
 
 **Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
-*Ultra-compact Inline Toolbar · Mixed-Album ZIP32 Engine · Local Bookmark Vault*  
+*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Selective Repost System · Mixed-Album ZIP32 Engine*  
 *Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
-[![Release: v5.0.0](https://img.shields.io/badge/Release-v5.0.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Release: v5.1.0](https://img.shields.io/badge/Release-v5.1.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -18,26 +18,93 @@
 ![Storage: IndexedDB](https://img.shields.io/badge/Storage-IndexedDB%20Vault-blue?style=flat-square)
 ![Design: Clean Minimal](https://img.shields.io/badge/Design-Clean%20Minimal%20Precision-purple?style=flat-square)
 
+<br/>
+
+<p align="center">
+  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.1.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
+</p>
+
 </div>
 
 ---
 
-## 🧭 Visual Interface Map
+## 🧭 Visual Interface & Panel Tour
 
-The ultra-compact **Inline Toolbar** sits seamlessly beneath the active chat header (34px height). Disclosures open as non-intrusive floating popovers with zero layout shift or chat occlusion.
+Telefilter Desktop integrates directly into [Telegram WebK](https://web.telegram.org/k/) with zero DOM layout shift, maintaining Telegram's native message rendering while adding precision media intelligence.
+
+### 1. Ultra-Compact Inline Media Toolbar
+The 34px inline toolbar docks directly underneath the active chat topbar. Filter pills toggle instantaneously via pure CSS classes, updating live counts for visible messages.
 
 <p align="center">
-  <img src="assets/toolbar-map.svg" alt="Telefilter Desktop Interface Map" width="100%">
+  <img src="assets/panel-toolbar.png" alt="Inline Media Filter Toolbar" width="85%" style="border-radius: 6px;">
 </p>
+
+- **Instant Category Isolation:** `All`, `Text`, `Photos`, `Videos`, `Files`, and `Viral` (scrubs messages by emoji reaction counts).
+- **Split Downloader:** Click `Download` for direct native streams, or click `▾` to toggle `Bundle as ZIP` archive mode.
+- **Fast Disclosures:** Popover sub-menus open out-of-flow without expanding the chat header or obscuring messages.
 
 ---
 
-## ⚡ Core Capabilities
+### 2. Floating Bulk Action Dock (MaxPland Style)
+When multiple messages are selected, an ergonomic floating action dock appears at the bottom center of the active chat.
+
+<p align="center">
+  <img src="assets/panel-bulk-bar.png" alt="Floating Bulk Action Dock" width="70%" style="border-radius: 8px;">
+</p>
+
+- **Zero Right-Click Clutter:** No need to navigate nested browser context menus.
+- **One-Click Batch Actions:** `Download` selected items, `Repost` to other chats or Saved Messages, or `Bookmark` into your local vault.
+- **Selection Count Badge:** Displays the real-time count of selected messages across the viewport.
+
+---
+
+### 3. Modular Settings & Selective Reposting
+Access advanced configuration anytime via the toolbar's `…` menu. Everything is organized into clear functional cards.
+
+<p align="center">
+  <img src="assets/panel-settings.png" alt="Modular Settings Dialog" width="55%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
+</p>
+
+- **↗ Repost & Forwarding Configuration:** Choose what to forward—enable or disable message text and media files independently.
+- **⬇ Download & Export:** Toggle single-click ZIP bundling, standardized smart file naming, and `.txt` sidecar captions.
+- **🗄️ Workspace & Storage:** Quick access to the Bookmark Library, Session History, Error Diagnostics, and IndexedDB Vault deduplication cache.
+
+---
+
+### 4. Telefilter Workspace Library & Message Locator
+An offline-first personal catalog of bookmarked messages and assets, stored strictly inside your browser.
+
+<p align="center">
+  <img src="assets/panel-library.png" alt="Workspace Library Modal" width="65%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
+</p>
+
+- **Full-Fidelity Jump Locator:** 1-click jumps directly back to the original message in chat history, scrolling and flashing the target bubble.
+- **Advanced Search Syntax:** Filter by `tag:design`, `type:photo`, `chat:name`, or message ID.
+- **Tag Management & Data Export:** Add custom tags to bookmarks or export your library as structured JSON.
+
+---
+
+### 5. In-Memory Streaming ZIP32 Engine & Live Progress
+When downloading albums or batches as a `.zip` archive, Telefilter compiles media in-memory using a pure client-side binary generator.
+
+<p align="center">
+  <img src="assets/panel-download.png" alt="Active Download Progress Panel" width="80%" style="border-radius: 6px;">
+</p>
+
+- **Zero External Dependencies:** Built-in Bitwise CRC32 lookup table and direct `Uint8Array` binary headers—no JSZip or external CDNs required.
+- **Real-Time Progress:** View completed items, total payload size, compression progress, and pause/cancel controls.
+- **Deduplication Ledger:** IndexedDB Vault remembers previously downloaded file hashes to prevent redundant downloads.
+
+---
+
+## ⚡ Core Capabilities Matrix
 
 | Capability | Module | What It Does | Technical Advantage |
 | :--- | :---: | :--- | :--- |
 | **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
-| **Mixed-Album ZIP Engine** | 📦 | Unpacks multi-item mixed photo/video albums into an organized, single **.zip archive**. | Built-in ZIP32 compiler; automatically deduplicates shared media keys. |
+| **Floating Bulk Dock** | ⚓ | Ergonomic bottom dock for batch actions upon selecting chat messages. | Eliminates context menu interference; zero event hijacking. |
+| **Selective Repost** | ↗️ | Configurable repost engine: forward text only, media only, or both. | Respects user preferences in settings; native Telegram bridge. |
+| **Mixed-Album ZIP Engine** | 📦 | Compiles multi-item mixed photo/video albums into an organized **.zip archive**. | Built-in ZIP32 compiler; unpacks grouped albums automatically. |
 | **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
 | **Deep Harvester** | ⚡ | Automated virtual scroller that traverses historical messages to build a media index. | Bypasses Telegram's Virtual DOM pruning limits for large chats. |
 | **Workspace Library** | 🔖 | Save message coordinates, tags, and local notes into an offline searchable index. | Jump directly back to any historical message origin with one click. |
@@ -47,96 +114,60 @@ The ultra-compact **Inline Toolbar** sits seamlessly beneath the active chat hea
 
 ---
 
-## 🎯 Quick Workflow
+## 🔬 Under the Hood & Privacy Invariants
 
-### 1. Filter & Isolate
-Click any media pill (**Photos**, **Videos**, **Files**) on the toolbar:
-- Irrelevant chat bubbles are instantly hidden via CSS.
-- Badge counters display real-time media counts in the current view.
-- **Pro-tip:** Double-click any filter pill to batch-select all items in that category.
+### 1. Zero-Allocation Binary ZIP32 Compiler
+Telegram WebK presents challenges when handling mixed-media albums (interleaved photos and videos). Rather than relying on heavy third-party libraries, Telefilter Desktop embeds a native ZIP32 compiler:
+- **Bitwise CRC32 Table:** Pre-computed 256-entry lookup table (`0xEDB88320` polynomial), calculated in a single pass over each media stream.
+- **Binary Array Structs:** Constructs binary ZIP Local Headers, Central Directory Records, and End of Central Directory (EOCD) directly via `Uint8Array`.
+- **Immediate Memory Reclamation:** Releases temporary blob memory immediately upon browser disk handoff, preventing memory leaks during large downloads.
 
-### 2. Choose Download Mode
-- **Direct Stream:** Select messages and click `Download` for standard browser download handling.
-- **ZIP Archive:** Click the **`▾`** split arrow and toggle `Bundle as ZIP`. The button changes to `ZIP Download` and compresses all selected media into one organized archive.
-
-### 3. Bookmark & Harvest
-- Click **`Library`** to view saved message pins, search custom tags, or jump directly to chat coordinates.
-- Click **`…`** to launch the automated Deep Harvester or configure custom naming rules.
-
----
-
-## 🔬 Under the Hood: Mixed-Album ZIP32 & Privacy Invariants
-
-### 1. In-Memory Streaming ZIP32 Compiler
-Telegram WebK presents complex challenges when handling mixed-media albums (interleaved photos and videos). Rather than using external bulky libraries (like JSZip), Telefilter Desktop embeds an ultra-optimized native ZIP32 compiler:
-- **Bitwise CRC32 Generator:** Pre-computed 256-entry lookup table (`0xEDB88320` polynomial), computed in a single pass over each entry.
-- **Zero-Allocation Memory Streams:** Constructs binary ZIP Local Headers, Central Directory Records, and End of Central Directory (EOCD) structures directly using native `Uint8Array` byte operations.
-- **Strict Garbage Isolation:** Releases temporary blob memory immediately after disk handoff, preventing memory leaks during large album downloads.
-
-### 2. Resource Footprint
+### 2. Privacy & Resource Footprint
 
 | Metric | Specification | Practical Outcome |
 | :--- | :--- | :--- |
-| **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed — no redundant CPU cost |
-| **Filter Application** | CSS class toggles only, no DOM rebuild | Chat never re-renders while filtering |
+| **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed — no redundant CPU consumption |
+| **Filter Performance** | CSS class toggles only, no DOM rebuild | Zero layout shifts; chat never re-renders while filtering |
 | **External Dependencies** | **0** (Pure ES2022 JavaScript) | Zero supply-chain attack vectors |
-| **Telemetry & Outbound Calls** | **0** — the only network call fetches the Telegram media itself | Complete session and token privacy |
+| **Network Privacy** | **0** telemetry or outbound calls | All network activity stays strictly between your browser and Telegram |
+| **Local Storage** | Browser-isolated IndexedDB + localStorage | Bookmarks and settings never leave your personal computer |
 
 ---
 
-## 🛠️ Design & Engineering Principles
+## 🚀 Installation & Setup
 
-| Principle | Specification |
-| :--- | :--- |
-| **Zero Dependencies** | 100% pure vanilla ES2022 JavaScript. No jQuery, React, or external CDN dependencies. |
-| **Solid Neutral Surface** | High-taste dark palette (`#131922`), hairline borders (`1px solid #2b3543`), and dual-layer shadows. |
-| **Strict Baseline Rhythm** | Standardized 28px button heights and a low-profile 34px toolbar to maximize chat viewport space. |
-| **Floating Popovers** | Sub-menus render out-of-flow as absolute popovers with click-outside auto-dismissal. |
-| **100% Local Privacy** | In-memory compression and IndexedDB transactions stay strictly local within the user's browser sandbox. |
-
----
-
-## 🚀 Installation & Distribution
-
-### Option A: Install via Greasy Fork (Fastest · Auto-Updating)
-1. Ensure you have [Tampermonkey](https://www.tampermonkey.net/) installed in your browser (Brave, Chrome, Firefox, or Edge).
-2. Click to install directly from Greasy Fork:  
-   👉 **[Install from Greasy Fork (v5.0.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
+### Option A: Greasy Fork (Recommended · Auto-Updating)
+1. Install [Tampermonkey](https://www.tampermonkey.net/) (or Violentmonkey) in your browser.
+2. Click to install directly:  
+   👉 **[Install from Greasy Fork (v5.1.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
 3. Tampermonkey will prompt you to confirm. Click **Install**.
-4. *(Bonus)* Automatically receive future version updates directly within Tampermonkey!
+4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
 
 ### Option B: One-Click Direct Install (GitHub RAW)
-1. Click the GitHub raw distribution link:  
+1. Click the raw distribution link:  
    👉 **[Install via GitHub RAW](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
-2. Tampermonkey will open its installation dialog. Click **Install**.
+2. Confirm the installation in Tampermonkey.
 
 ### Option C: Manual Setup
 1. Copy the source code from [`telefilter_desktop.user.js`](telefilter_desktop.user.js).
-2. Open Tampermonkey Dashboard → click **Add a new script (+)**.
-3. Paste the code, press **Ctrl + S** (or **Cmd + S**) to save.
-4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
+2. In Tampermonkey Dashboard, click **Add a new script (+)**.
+3. Paste the code and save (**Ctrl + S** / **Cmd + S**).
 
 ---
 
-## 🧪 Verification & Test Suite
+## 🧪 Verification & Automated Testing Suite
 
-Run the built-in test suite to verify script syntax, regression coverage, and production-WebK DOM integrity:
+The repository includes comprehensive unit, regression, DOM fixture, and headless browser tests:
 
 ```bash
-# 1. Syntax and lexical validation
-node --check telefilter_desktop.user.js
+# 1. Complete test suite (Node syntax check, 18 regression tests, static contract smoke test)
+npm test
 
-# 2. Engine, ZIP32, and album-unpacking regression tests (15/15)
-node --test telefilter_desktop.regression.test.js
+# 2. Headless Chromium browser layout & DOM tests across 8 viewport configurations
+npm run test:browser
 
-# 3. Static + VM smoke suite
-node telefilter_desktop.smoke.test.js
-
-# 4. Headless-browser checks on production WebK DOM fixtures (run `npm install` once)
-node telefilter_desktop.ui.check.cjs
-node telefilter_desktop.webk_layout.test.cjs
-node telefilter_desktop.dom.check.cjs
-node telefilter_desktop.live.check.cjs   # full shipped script, end-to-end
+# 3. Regenerate all real UI panel screenshots in assets/
+npm run capture:panels
 ```
 
 ---
@@ -145,12 +176,9 @@ node telefilter_desktop.live.check.cjs   # full shipped script, end-to-end
 
 This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
 
-
-
 <div align="center">
 
-**Telefilter Desktop** <sub>v5.0.0</sub> · Maintained with high standards  
+**Telefilter Desktop** <sub>v5.1.0</sub> · Built for Precision & Reliability  
 *Clean Minimal Precision · High Taste · Zero Slop*
 
 </div>
-

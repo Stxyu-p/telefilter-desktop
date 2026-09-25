@@ -16,7 +16,7 @@ function section(from, to) {
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    const blocks = [section('  function ico(', '  const getMedia'), section('  function buildBar()', '  /* ─── INJECT & DOM WATCHER'), section('  function mountStyles()', '  /* ─── TEST HOOKS'), section('  function renderActionButtons()', '  async function downloadTargets'), section('  function pnl()', '  function mountDialog(')];
+    const blocks = [section('  function ico(', '  const getMedia'), section('  function buildBar()', '  function inject('), section('  function mountStyles()', '  if (W.__TF5_TEST_MODE__'), section('  function renderActionButtons()', '  async function downloadTargets'), section('  function pnl()', '  function mountDialog(')];
     // Extract the shipped filter definitions too, including actual SVG codes.
     const filters = require('node:vm').runInNewContext(section('  const FILTERS =', '  const MEDIA_BUBBLE_SELECTOR_OLD') + ';FILTERS;');
     assert.equal(filters.length, 5); assert(filters.every(f => f.ico !== 'e994')); assert(filters.every(f => f.ico));
@@ -27,7 +27,7 @@ function section(from, to) {
         const noop=()=>{};
         const S={zipMode:false,batchRunning:false,fActive:new Set(),panel:null,lastFailedTargets:[]};
         const calls={filter:0,download:0,library:0,settings:0,history:0,harvest:0,save:0};
-        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,toggleDeepHarvester:()=>calls.harvest++,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showHistory:()=>calls.history++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
+        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,toggleDeepHarvester:()=>calls.harvest++,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,handleRepostSelection:noop,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showHistory:()=>calls.history++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
         // Code is extracted only from the trusted local artifact; no external strings.
         const api = new Function(...Object.keys(env), blocks.join('\n')+'; return {buildBar,mountStyles,renderActionButtons,pnlUpd,pnlDone};')(...Object.values(env));
         api.mountStyles();

@@ -16,7 +16,7 @@ function section(from, to) {
     const page = await browser.newPage();
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
-    const blocks = [section('  function parseColor(', '  let themeObserver'), section('  function ico(', '  const getMedia'), section('  function buildBar()', '  /* ─── INJECT & DOM WATCHER'), section('  function mountStyles()', '  /* ─── TEST HOOKS'), section('  function renderActionButtons()', '  async function downloadTargets'), section('  function pnl()', '  function mountDialog('), section('  function inject(', '  /* ─── LEAN 2-ACTION RIGHT-CLICK')];
+    const blocks = [section('  function parseColor(', '  let themeObserver'), section('  function ico(', '  const getMedia'), section('  function buildBar()', '  function inject('), section('  function mountStyles()', '  if (W.__TF5_TEST_MODE__'), section('  function renderActionButtons()', '  async function downloadTargets'), section('  function pnl()', '  function mountDialog('), section('  function inject(', '  const findColumn = () =>')];
     const filters = require('node:vm').runInNewContext(section('  const FILTERS =', '  const MEDIA_BUBBLE_SELECTOR_OLD') + ';FILTERS;');
     const shapes = {
       // Production WebK shapes (grep-verified 2026-09-25): #column-center > .chat
@@ -35,7 +35,7 @@ function section(from, to) {
         const env = { S, VERSION: 'test', FILTERS: filters, isNewWebKDOM: v => isNewWebKDOM = v, debug: noop, normalizePeerId: String, currentPeerId: () => '1',
           handleControlFeedback: noop, updateBadge: noop, saveScrollAnchor: noop, applyFilterState: noop, restoreScrollAnchor: noop, saveChatFilter: noop,
           forceRefreshLazyMedia: noop, toggleFilter: noop, runCategoryJob: noop, toggleDeepHarvester: noop, saveStorage: noop, showActionAck: noop,
-          downloadNativeSelection: noop, showLocatorLibrary: noop, updateBookmarkPill: noop, showSettings: noop, showHistory: noop, syncDialogTheme: noop,
+          downloadNativeSelection: noop, handleRepostSelection: noop, showLocatorLibrary: noop, updateBookmarkPill: noop, showSettings: noop, showHistory: noop, syncDialogTheme: noop,
           setupMediaCounter: noop, watchBubblesHost: noop, watchBarHost: noop, watchColumn: noop, scheduleInject: noop };
         const api = new Function(...Object.keys(env), blocks.join('\n') + '; return {inject,mountStyles};')(...Object.values(env));
         api.mountStyles();

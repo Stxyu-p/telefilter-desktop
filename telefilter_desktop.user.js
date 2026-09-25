@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telefilter Desktop Edition v5
 // @namespace    telefilter-5
-// @version      5.0.0
+// @version      5.1.0
 // @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
 // @license      MIT
@@ -16,27 +16,9 @@
 // @run-at       document-start
 // ==/UserScript==
 
-/*
- * TELEFILTER DESKTOP EDITION v5 (Ultimate Edition)
- *
- * 🛡️  Low-coupling Architecture:
- *        • Zero DOM mutation on message bubbles / images / albums
- *        • Telegram media renders 100% natively via WebK internal engine
- * 📦  Pure Client-side ZIP32 Generator (Zero External Dependencies)
- * 🗄️  TelefilterVault: Persistent Deduplication via IndexedDB
- * ⚡  Deep Harvester: DOM Virtualization Buster with live progress
- * 👁️  MediaViewer Direct Actions (Overlay buttons)
- * 🔓  Protected Content & Text Unblocker: Re-enables select, copy & context menu
- * 📝  Smart File Naming & Captions Sidecar (.txt metadata bundled)
- * 🔥  Reactions & Viral Scrubber: Fast filtering of top-reacted posts
- * 🔖  Independent Bookmarks Workspace with rich search syntax
- * 🚀  WeakMap-driven O(1) Counter & Zero-scroll overhead
- */
-
 (function () {
   'use strict';
 
-  /* ─── GATE & ENVIRONMENT ──────────────── */
   const isWebK = location.hostname.includes('webk') ||
                  location.pathname.startsWith('/k/');
   if (!isWebK) {
@@ -45,7 +27,7 @@
   }
 
   const W = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-  const VERSION = '5.0.0';
+  const VERSION = '5.1.0';
   const LIMITS = Object.freeze({
     history: 50,
     bookmarks: 500,
@@ -58,14 +40,12 @@
   const UI = Object.freeze({
     ackMs: 420,
     ackToastMs: 900,
-    scrollSettle: 300,
-    contextWatch: 600
+    scrollSettle: 300
   });
   const DAY_MS = 86_400_000;
   const DEBUG = false;
   const debug = (...args) => { if (DEBUG) console.debug('[TF5]', ...args); };
 
-  /* ─── PURE CLIENT-SIDE ZIP32 GENERATOR (Zero External Dependencies) ─── */
   const CRC32_TABLE = new Uint32Array(256);
   (() => {
     for (let i = 0; i < 256; i++) {
@@ -169,7 +149,6 @@
     return new Blob([...localParts, ...centralParts, eocd], { type: 'application/zip' });
   }
 
-  /* ─── UTILS & NATIVE BRIDGE ──────────────── */
   const normalizePeerId = pid => pid == null ? '' : String(pid);
   const mediaKey = (pid, mid) => normalizePeerId(pid) + ':' + String(mid ?? '');
   const TG = Object.freeze({
@@ -178,6 +157,8 @@
     currentThreadId: () => W.appImManager?.chat?.threadId ?? null,
     currentMonoforumThreadId: () => W.appImManager?.chat?.monoforumThreadId ?? null,
     selection: () => W.appImManager?.chat?.selection ?? null,
+    myId: () => W.appImManager?.myId ?? null,
+    repostManager: () => W.appImManager?.chat?.managers?.appMessagesManager ?? W.appMessagesManager ?? null,
     lookupMessage: (pid, mid) => W.mtprotoMessagePort?.getMessageByPeer(pid, +mid),
     downloadMedia(media) {
       const dm = W.appDownloadManager;
@@ -202,6 +183,11 @@
       e9b5: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3Z"/>',
       e979: '<path d="M14 2H6v20h12V6Zm0 0v5h4M8 12h8M8 16h8"/>',
       ea84: '<path d="m12 3 3 6 6 1-4 5 1 6-6-3-6 3 1-6-4-5 6-1Z"/>',
+      ea8f: '<path d="m15 14 5-5-5-5M4 20v-7a4 4 0 0 1 4-4h12"/>',
+      ea8e: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+      e95d: '<path d="M18 6 6 18M6 6l12 12"/>',
+      e994: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+      e973: '<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
     };
     if (paths[code]) {
       const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -235,7 +221,6 @@
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
-  /* ─── SMART FILE NAMING & SANITIZER ─── */
   function sanitizeFileName(str, fallback = 'file') {
     if (!str) return fallback;
     const cleaned = String(str)
@@ -263,7 +248,6 @@
     return `${dateStr}_${chat}_${cleanBase}${ext}`;
   }
 
-  /* ─── INDEXEDDB VAULT (Persistent Mid Deduplication) ─── */
   const TelefilterVault = {
     db: null,
     ready: false,
@@ -336,7 +320,6 @@
     }
   };
 
-  /* ─── PROTECTED CONTENT & TEXT UNBLOCKER ─── */
   function enableProtectedContentUnblocker() {
     const unblockStyle = document.createElement('style');
     unblockStyle.id = 'tf5-unblock-css';
@@ -351,7 +334,6 @@
     `;
     (document.head || document.documentElement).appendChild(unblockStyle);
 
-    // Bypass copy & text selection restrictions in protected chats (Zero contextmenu tampering)
     const bypassEvents = ['copy', 'selectstart'];
     bypassEvents.forEach(evtName => {
       window.addEventListener(evtName, ev => {
@@ -362,9 +344,14 @@
         }
       }, true);
     });
+
+    try {
+      if (W.appImManager?.chat && W.appImManager.chat.noForwards) {
+        W.appImManager.chat.noForwards = false;
+      }
+    } catch (_) {}
   }
 
-  /* ─── GLOBAL STATE ─────────────── */
   const S = {
     fActive: new Set(),
     isScrolling: false,
@@ -381,6 +368,8 @@
     zipMode: false,
     smartNaming: true,
     saveCaptions: true,
+    repostText: true,
+    repostMedia: true,
     dlPill: null,
     bmPill: null,
     zipPill: null,
@@ -408,7 +397,6 @@
     fActivePeer: null,
   };
 
-  /* ─── FEEDBACK & ERRORS ────────── */
   const controlPulseTimers = new WeakMap();
   function pulseControl(el, tone = 'accent') {
     if (!el?.isConnected) return;
@@ -438,7 +426,7 @@
   }
 
   function handleControlFeedback(ev) {
-    const btn = ev.target.closest?.('button,.tf3-ctx-action');
+    const btn = ev.target.closest?.('button');
     if (!btn) return;
     pulseControl(btn, btn.classList.contains('tf3-btn-danger') || btn.classList.contains('cc') ? 'danger' : 'accent');
   }
@@ -452,7 +440,6 @@
     S.errors = S.errors.slice(0, LIMITS.errors);
   }
 
-  /* ─── SINGLE DOWNLOAD ENGINE ─── */
   async function dlSingleShot(msg) {
     const media = getMedia(msg);
     if (!TG.hasDownloadManager() || !media) return false;
@@ -469,7 +456,6 @@
     }
   }
 
-  // ponytail: 128 MiB ZIP payload, not total browser RAM; use native DL for larger jobs.
   const ZIP_PAYLOAD_LIMIT = 128 * 1024 * 1024;
 
   async function getMediaBytes(msg, remaining = ZIP_PAYLOAD_LIMIT) {
@@ -488,7 +474,6 @@
     return S.panelCancel ? null : bytes;
   }
 
-  /* ─── STORAGE SYSTEM ───────────── */
   const FILTER_MEM_KEY = 'tf3_chat_filters';
 
   function rebuildBookmarkKeys() {
@@ -512,6 +497,8 @@
         if (typeof d.zipMode === 'boolean') S.zipMode = d.zipMode;
         if (typeof d.smartNaming === 'boolean') S.smartNaming = d.smartNaming;
         if (typeof d.saveCaptions === 'boolean') S.saveCaptions = d.saveCaptions;
+        if (typeof d.repostText === 'boolean') S.repostText = d.repostText;
+        if (typeof d.repostMedia === 'boolean') S.repostMedia = d.repostMedia;
       }
       try {
         const fm = JSON.parse(localStorage.getItem(FILTER_MEM_KEY));
@@ -540,11 +527,12 @@
         zipMode: S.zipMode,
         smartNaming: S.smartNaming,
         saveCaptions: S.saveCaptions,
+        repostText: S.repostText,
+        repostMedia: S.repostMedia,
       }));
     } catch (e) { console.warn('[TF5] save storage failed:', e); }
   }
 
-  /* ─── CATEGORY & MEDIA SELECTORS ───────────── */
   const FILTERS = [
     { key: 'text',  label: 'Text',    ico: 'ea87' },
     { key: 'photo', label: 'Photos',  ico: 'e9c3' },
@@ -680,7 +668,6 @@
     }
   }
 
-  /* ─── LAZY-LOAD REFRESH ─── */
   function forceRefreshLazyMedia() {
     if (!S.bubbles) return;
     const scrollTarget = S.bubbles.closest('.scrollable-y') ||
@@ -700,7 +687,6 @@
     });
   }
 
-  /* ─── ACTION BUTTON & BATCH DOWNLOAD ENGINE ─── */
   function renderActionButtons() {
     const dlBtn = S.dlPill;
     if (!dlBtn) return;
@@ -789,13 +775,11 @@
           if (!bytes?.length) throw new Error('ZIP media bytes unavailable');
           zipBytes += bytes.length + (caption?.length || 0);
           if (zipBytes > ZIP_PAYLOAD_LIMIT) throw new Error('ZIP payload limit reached');
-          // Message ID + batch index keeps duplicate original filenames distinct.
           const entryName = `${msg.id}_${i + 1}_${sanitizeFileName(smartName, 'media')}`;
           zipFiles.push({ name: entryName, data: bytes });
           if (caption) zipFiles.push({ name: entryName + '.txt', data: caption });
           zipMessages.push(msg);
         } else {
-          // Standard native direct download
           const success = await dlSingleShot(msg);
           if (success) {
             ok++;
@@ -813,10 +797,8 @@
         }
       }
 
-      // Finish ZIP bundle if active and files were collected
       if (zipMode && zipFiles.length > 0 && !S.panelCancel) {
         S.panelRefs.status.textContent = 'Building ZIP archive...';
-        // ponytail: DEBUG-gated diagnostics for the album ZIP path (enable via TF5_DEBUG=true).
         debug('[TF5 ZIP build]', { entries: zipFiles.length, bytes: zipBytes });
         const zipBlob = createStoredZip(zipFiles);
         const pad = n => String(n).padStart(2, '0');
@@ -830,7 +812,6 @@
         document.body.appendChild(a);
         try { a.click(); }
         finally { a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000); }
-        // ponytail: browser handoff only; disk completion needs browser download APIs.
         for (const msg of zipMessages) {
           await TelefilterVault.recordDownload(batchPeerId, msg.mid ?? msg.id, metaFromMsg(msg, batchChatTitle));
           ok++;
@@ -876,7 +857,6 @@
       let members = [seed];
       if (group) {
         if (typeof manager?.getMessagesByGroupedId !== 'function') {
-          // ponytail: diagnostics for the live-build path; drop once verified on Telegram.
           console.warn('[TF5 album-diag]', 'Album API unavailable', { im: typeof TG.im(), chat: !!TG.im()?.chat, hasManagers: !!manager });
           throw new Error('Album API unavailable; no partial ZIP saved');
         }
@@ -895,7 +875,6 @@
         }
         out.set(String(mid), msg);
       }
-      // Counts only: no captions, media URLs, or account identifiers in diagnostics.
       if (group) debug('[TF5 ZIP album]', { parsed: summarize(members), uniqueSoFar: out.size });
     }
     const result = [...out.values()];
@@ -1020,7 +999,146 @@
     }
   }
 
-  /* ─── DEEP HARVESTER (DOM Virtualization Scraper) ─── */
+  function getRecentChats(max = 30) {
+    const seen = new Set();
+    const chats = [];
+    const myId = TG.myId();
+    if (myId) {
+      seen.add(Number(myId));
+      chats.push({ id: Number(myId), name: 'Saved Messages' });
+    }
+    const els = document.querySelectorAll('[data-peer-id]');
+    for (let i = 0; i < els.length && chats.length < max; i++) {
+      const id = Number(els[i].dataset?.peerId);
+      if (!id || seen.has(id)) continue;
+      const t = els[i].querySelector('.peer-title, .title');
+      const name = (((t || els[i]).textContent) || '').trim().split('\n')[0];
+      if (!name) continue;
+      seen.add(id);
+      chats.push({ id, name });
+    }
+    return chats;
+  }
+
+  async function promptDestinationChat() {
+    const chats = getRecentChats(30);
+    if (!chats.length) return TG.myId();
+    const lines = chats.map((c, i) => `${i + 1}. ${c.name}`).join('\n');
+    const input = prompt('Select destination chat (0 = Cancel):\n' + lines, '1');
+    if (!input) return null;
+    const n = parseInt(input, 10);
+    if (!n || n < 1 || n > chats.length) return null;
+    return chats[n - 1].id;
+  }
+
+  async function repostTargets(targets, destPeerId, onProgress = null) {
+    if (!targets || !targets.length) return { ok: 0, fail: 0, files: 0 };
+    const pm = TG.repostManager();
+    if (!pm || typeof pm.sendText !== 'function') {
+      throw new Error('Telegram messages manager unavailable');
+    }
+    const dest = destPeerId || TG.myId();
+    if (!dest) throw new Error('No destination peer specified');
+
+    const sendTextEnabled = typeof S !== 'undefined' && typeof S.repostText === 'boolean' ? S.repostText : true;
+    const sendMediaEnabled = typeof S !== 'undefined' && typeof S.repostMedia === 'boolean' ? S.repostMedia : true;
+    if (!sendTextEnabled && !sendMediaEnabled) {
+      throw new Error('Both text and media reposting are disabled in Settings');
+    }
+
+    let ok = 0, fail = 0, files = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const m = targets[i];
+      const mid = String(m?.mid ?? m?.id ?? '');
+      const bubble = mid ? (findBubbleByMid(mid) || document.querySelector(`.bubble[data-mid="${mid}"]`)) : null;
+      const txt = m?.message || (bubble ? bubble.innerText.replace(/\s+/g, ' ').trim() : '');
+
+      try {
+        if (sendTextEnabled && txt && txt.length) {
+          await pm.sendText({ peerId: dest, text: '[Repost] ' + txt.slice(0, 400) });
+          ok++;
+        }
+
+        if (sendMediaEnabled && bubble) {
+          let getBlob = null, name = '';
+          const vid = bubble.querySelector('video');
+          const vu = vid && vid.src ? new URL(vid.src, location.href).href : '';
+          const img = bubble.querySelector('img[src^="blob:"]');
+
+          if (vu.indexOf('/stream/') !== -1) {
+            getBlob = fetch(vu).then(r => r.blob());
+            name = 'tf-' + mid + '.mp4';
+          } else if (img) {
+            getBlob = fetch(img.src).then(r => r.blob());
+            name = 'tf-' + mid + '.jpg';
+          }
+
+          if (getBlob && typeof pm.sendFile === 'function') {
+            const blob = await getBlob;
+            if (blob && blob.size > 0) {
+              const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+              await pm.sendFile({ peerId: dest, file, isMedia: true });
+              files++;
+            }
+          }
+        }
+      } catch (err) {
+        fail++;
+        recordError(`Repost #${mid}`, err, mid);
+      }
+      if (onProgress) onProgress(i + 1, targets.length);
+      if (i + 1 < targets.length) await sleep(200);
+    }
+    return { ok, fail, files };
+  }
+
+  async function repostSingle(peerId, mid, anchor, destPeerId = null) {
+    try {
+      const msg = (await lookupMsg(peerId, mid)) || { id: mid, mid };
+      const dest = destPeerId || TG.myId();
+      const res = await repostTargets([msg], dest);
+      if (res.ok || res.files) {
+        showActionAck('Reposted to Saved', anchor, 'ok');
+      } else {
+        showActionAck('Repost failed', anchor, 'danger');
+      }
+      return res;
+    } catch (err) {
+      recordError(`Repost #${mid}`, err, mid);
+      showActionAck('Repost failed', anchor, 'danger');
+      return { ok: 0, fail: 1, files: 0 };
+    }
+  }
+
+  async function handleRepostSelection(e, forcePick = false) {
+    e?.stopPropagation();
+    const anchor = document.getElementById('tf5-bulk-rp') || S.dlPill;
+    const selection = TG.selection();
+    if (!selection?.isSelecting) {
+      showActionAck('Select messages first', anchor, 'accent');
+      return;
+    }
+    try {
+      const selected = await getNativeSelectedMessages();
+      if (!selected.length) {
+        showActionAck('No messages selected', anchor, 'accent');
+        return;
+      }
+      let dest = TG.myId();
+      if (forcePick || e?.altKey) {
+        dest = await promptDestinationChat();
+        if (!dest) return;
+      }
+      showActionAck(`Reposting ${selected.length}...`, anchor, 'ok');
+      const targets = selected.map(row => row.msg);
+      const res = await repostTargets(targets, dest);
+      showActionAck(`Reposted ${res.ok} msg (${res.files} media)`, anchor, res.fail ? 'danger' : 'ok');
+    } catch (err) {
+      recordError('Repost selection', err);
+      showActionAck('Could not repost messages', anchor, 'danger');
+    }
+  }
+
   let isHarvesting = false;
   let harvestStopRequested = false;
 
@@ -1040,7 +1158,6 @@
     if (pill) { pill.classList.add('is-running'); pill.textContent = '⏹ Stop'; }
     try {
       report();
-      // ponytail: bounded DOM discovery, not proof that server history is exhausted.
       while (!harvestStopRequested && valid() && gained < targetCount && stagnantSteps < 10 && Date.now() - started < 120000) {
         const before = gained, top = scrollContainer.scrollTop;
         scrollContainer.scrollTop = Math.max(0, top - 800);
@@ -1078,7 +1195,6 @@
     }).catch(err => { recordError('Harvest', err); showActionAck('Harvest failed', anchor, 'danger'); });
   }
 
-  /* ─── MEDIAVIEWER ACTION OVERLAY ─── */
   function getActiveMediaViewerInfo() {
     const mv = document.querySelector('.media-viewer-whole, #MediaViewer');
     if (!mv) return null;
@@ -1129,7 +1245,6 @@
     const anchor = document.getElementById('tf5-mv-bm');
     const viewer = W.appMediaViewer, target = viewer?.target, context = viewer?.searchContext;
     const pid = Number(target?.peerId), mid = Number(target?.mid);
-    // Avatar/local/scheduled viewers do not have a normal chat locator.
     if (!context || context.isScheduled || !Number.isSafeInteger(pid) || !pid ||
         !Number.isSafeInteger(mid) || mid <= 0 || mid === Number.MAX_SAFE_INTEGER) {
       showActionAck('Bookmark from the message menu instead', anchor, 'accent');
@@ -1155,7 +1270,7 @@
         dlBtn.type = 'button';
         dlBtn.className = 'tf3-btn tf3-btn-primary tf3-btn-sm';
         dlBtn.innerHTML = `${ico('e979').outerHTML} DL`;
-        dlBtn.title = 'Quick Download';
+        dlBtn.title = 'Download media';
         dlBtn.onclick = ev => { ev.stopPropagation(); pulseControl(dlBtn); triggerMediaViewerDownload(); };
 
         const bmBtn = document.createElement('button');
@@ -1163,21 +1278,58 @@
         bmBtn.type = 'button';
         bmBtn.className = 'tf3-btn tf3-btn-sm';
         bmBtn.innerHTML = `${ico('ea8e').outerHTML} Save`;
-        bmBtn.title = 'Bookmark';
+        bmBtn.title = 'Bookmark message';
         bmBtn.onclick = ev => { ev.stopPropagation(); pulseControl(bmBtn); triggerMediaViewerBookmark(); };
 
-        container.append(dlBtn, bmBtn);
+        const rpBtn = document.createElement('button');
+        rpBtn.id = 'tf5-mv-rp';
+        rpBtn.type = 'button';
+        rpBtn.className = 'tf3-btn tf3-btn-sm';
+        rpBtn.innerHTML = `${ico('ea8f').outerHTML} Repost`;
+        rpBtn.title = 'Repost to Saved Messages';
+        rpBtn.onclick = ev => { ev.stopPropagation(); pulseControl(rpBtn); triggerMediaViewerRepost(); };
+
+        container.append(dlBtn, bmBtn, rpBtn);
         topbar.appendChild(container);
       }
     };
 
     const obs = new MutationObserver(checkOverlay);
     obs.observe(document.body, { childList: true, subtree: true });
-
-
   }
 
-  /* ─── BOOKMARKS & LOCAL LIBRARY ─── */
+  async function triggerMediaViewerRepost() {
+    const anchor = document.getElementById('tf5-mv-rp') || document.getElementById('tf5-mv-dl');
+    try {
+      const target = getActiveViewerMessageTarget();
+      const pid = target?.peerId ? normalizePeerId(target.peerId) : normalizePeerId(currentPeerId());
+      const mid = String(target?.lastMsgId || '');
+      if (mid && pid) {
+        showActionAck('Reposting...', anchor, 'ok');
+        await repostSingle(pid, mid, anchor);
+        return;
+      }
+      const info = getActiveMediaViewerInfo();
+      if (!info?.url) {
+        showActionAck('No media detected', anchor, 'danger');
+        return;
+      }
+      const pm = TG.repostManager();
+      const dest = TG.myId();
+      if (!pm || !dest) throw new Error('Telegram repost API unavailable');
+      showActionAck('Reposting...', anchor, 'ok');
+      const res = await fetch(info.url);
+      const blob = await res.blob();
+      const ext = info.type === 'video' ? '.mp4' : '.jpg';
+      const file = new File([blob], `tf-viewer-media${ext}`, { type: blob.type || 'application/octet-stream' });
+      await pm.sendFile({ peerId: dest, file, isMedia: true });
+      showActionAck('Reposted to Saved ✓', anchor, 'ok');
+    } catch (err) {
+      recordError('Viewer repost', err);
+      showActionAck('Repost failed', anchor, 'danger');
+    }
+  }
+
   function getActiveChatTitle() {
     const titleEl = document.querySelector('.MiddleHeader .title, .chat-header .title, .sidebar-header .title');
     return titleEl?.textContent?.trim() || document.title?.slice(0, 60) || 'Active Chat';
@@ -1465,10 +1617,24 @@
           info.appendChild(tags);
         }
         const actions = document.createElement('div'); actions.className = 'tf3-row-actions';
-        const jump = document.createElement('button'); jump.type = 'button'; jump.className = 'tf3-btn tf3-btn-primary tf3-btn-sm'; jump.textContent = 'Jump';
+        const jump = document.createElement('button'); jump.type = 'button'; jump.className = 'tf3-btn tf3-btn-primary tf3-btn-sm'; jump.textContent = 'Jump'; jump.title = 'Jump to message';
         jump.onclick = () => { close(); jumpToLocator(row.mid, row.pid, locatorCtxFrom(row)); };
         actions.appendChild(jump);
-        const dl = document.createElement('button'); dl.type = 'button'; dl.className = 'tf3-btn tf3-btn-sm'; dl.textContent = 'DL'; dl.title = 'Download again';
+        const rp = document.createElement('button'); rp.type = 'button'; rp.className = 'tf3-btn tf3-btn-sm'; rp.textContent = 'Repost'; rp.title = 'Repost (Alt-click: Pick chat)';
+        rp.onclick = async e => {
+          rp.disabled = true;
+          try {
+            let dest = TG.myId();
+            if (e.altKey) {
+              dest = await promptDestinationChat();
+              if (!dest) return;
+            }
+            showActionAck('Reposting...', rp, 'ok');
+            await repostSingle(row.pid, row.mid, rp, dest);
+          } finally { rp.disabled = false; }
+        };
+        actions.appendChild(rp);
+        const dl = document.createElement('button'); dl.type = 'button'; dl.className = 'tf3-btn tf3-btn-sm'; dl.textContent = 'DL'; dl.title = 'Download media';
         dl.onclick = async () => {
           dl.disabled = true;
           try {
@@ -1477,9 +1643,9 @@
           } finally { dl.disabled = false; }
         };
         actions.prepend(dl);
-        const tag = document.createElement('button'); tag.type = 'button'; tag.className = 'tf3-btn tf3-btn-sm'; tag.textContent = 'Tag';
+        const tag = document.createElement('button'); tag.type = 'button'; tag.className = 'tf3-btn tf3-btn-sm'; tag.textContent = 'Tag'; tag.title = 'Edit tags';
         tag.onclick = () => { const raw = prompt('Tags, separated by commas', (row.bookmark.tags || []).join(', ')); if (raw == null) return; setBookmarkTags(row.bookmark, raw); entries = buildLibraryEntries(); render(); };
-        const del = document.createElement('button'); del.type = 'button'; del.className = 'tf3-btn tf3-btn-danger tf3-btn-sm'; del.textContent = 'Delete';
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'tf3-btn tf3-btn-danger tf3-btn-sm'; del.textContent = 'Delete'; del.title = 'Delete bookmark';
         del.onclick = () => { removeBookmark(row.pid, row.mid); entries = buildLibraryEntries(); renderWorkspace(); render(); };
         actions.prepend(tag, del);
         item.append(info, actions); frag.appendChild(item);
@@ -1521,7 +1687,6 @@
     renderWorkspace(); render();
   }
 
-  /* ─── SCROLL ANCHOR LOCK ─── */
   function getVisibleAnchorBubble() {
     if (!S.bubbles) return null;
     const rect = S.bubbles.getBoundingClientRect();
@@ -1601,7 +1766,6 @@
     }
   }
 
-  /* ─── MEDIA COUNTER ─── */
   function forEachBubble(node, cb) {
     if (node.nodeType !== Node.ELEMENT_NODE) return;
     if (node.classList.contains('Message') || node.classList.contains('bubble')) { cb(node); return; }
@@ -1632,7 +1796,6 @@
     }
   }
 
-  /* ─── MEDIA INDEX (peerId -> mid -> cat) ─── */
   function ensureMediaPeerIndex(pid) {
     const key = normalizePeerId(pid);
     if (!key) return null;
@@ -1700,7 +1863,6 @@
     } else if (tracked) {
       S.mediaCat.delete(bubble);
       S.mediaMid.delete(bubble);
-      // Category transition above already removed the previous counts.
       changed = true;
     }
     return changed;
@@ -1829,7 +1991,6 @@
     });
   }
 
-  /* ─── THEME & DIALOG HELPERS ─────── */
   function parseColor(v) {
     const m = String(v || '').match(/rgba?\(\s*([\d.]+)[, ]+\s*([\d.]+)[, ]+\s*([\d.]+)(?:\s*[,/]\s*([\d.]+))?/i);
     return m ? { r: +m[1], g: +m[2], b: +m[3], a: m[4] == null ? 1 : +m[4] } : null;
@@ -1973,7 +2134,6 @@
     return close;
   }
 
-  /* ─── HISTORY & SETTINGS ───────────── */
   function addHistory(ok, total, chatTitle = '') {
     const now = new Date();
     const safeOk = Math.max(0, Number(ok) || 0);
@@ -2060,30 +2220,66 @@
     e?.stopPropagation();
     const overlay = document.createElement('div');
     overlay.id = 'tf3-overlay';
-    overlay.innerHTML = `<div class="tf3-card" role="dialog" aria-modal="true" aria-labelledby="tf3-settings-title">
+    overlay.innerHTML = `<div class="tf3-card tf3-settings-card" role="dialog" aria-modal="true" aria-labelledby="tf3-settings-title">
       <div class="tf3-sh">
-        <div class="tf3-title-wrap"><span class="tf3-title-icon">${ico('ea8d').outerHTML}</span><span><strong id="tf3-settings-title">Telefilter v5 Ultimate</strong><small>Desktop Edition</small></span></div>
+        <div class="tf3-title-wrap"><span class="tf3-title-icon">${ico('ea8d').outerHTML}</span><span><strong id="tf3-settings-title">Telefilter v${VERSION}</strong><small>Desktop Intelligence Suite</small></span></div>
         <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
       </div>
-      <button type="button" class="tf3-history-link" id="tf3-open-library"><span>${ico('ea8e').outerHTML}</span><span><strong>Workspace & Library</strong><small>Search bookmarks, tags and saved media</small></span><span class="tf3-chevron">›</span></button>
-      <button type="button" class="tf3-history-link" id="tf3-show-history" style="margin-top:8px"><span>${ico('e95c').outerHTML}</span><span><strong>Download History</strong><small>${S.history.length} sessions</small></span><span class="tf3-chevron">›</span></button>
-      <button type="button" class="tf3-history-link" id="tf3-show-errors" style="margin-top:8px"><span>!</span><span><strong>Recent Errors</strong><small>${S.errors.length} this session</small></span><span class="tf3-chevron">›</span></button>
-      <button type="button" class="tf3-history-link" id="tf3-clear-vault" style="margin-top:8px"><span>🗑️</span><span><strong>Clear Download Deduplication Cache</strong><small>${S.downloadedVaultKeys.size} saved IDs in IndexedDB</small></span><span class="tf3-chevron">›</span></button>
-      <div style="margin-top:14px; display:flex; flex-direction:column; gap:8px;">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="tf5-opt-zip" ${S.zipMode ? 'checked' : ''}>
-          <span><strong>Bundle batch as ZIP archive</strong> (No multiple prompts)</span>
+
+      <div class="tf3-set-group">
+        <div class="tf3-set-group-title">↗ Repost & Forwarding</div>
+        <label class="tf3-set-row">
+          <input type="checkbox" id="tf5-opt-rp-text" ${S.repostText ? 'checked' : ''}>
+          <span class="tf3-set-label">
+            <strong>Include message text</strong>
+            <small>Forward textual message content with [Repost] header</small>
+          </span>
         </label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="tf5-opt-naming" ${S.smartNaming ? 'checked' : ''}>
-          <span><strong>Smart File Naming</strong> (Date + Chat + Sender)</span>
-        </label>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-          <input type="checkbox" id="tf5-opt-captions" ${S.saveCaptions ? 'checked' : ''}>
-          <span><strong>Save Captions Sidecar</strong> (.txt text with media)</span>
+        <label class="tf3-set-row">
+          <input type="checkbox" id="tf5-opt-rp-media" ${S.repostMedia ? 'checked' : ''}>
+          <span class="tf3-set-label">
+            <strong>Include media files</strong>
+            <small>Forward photos, videos, and animations as native media</small>
+          </span>
         </label>
       </div>
-      <p class="tf3-note">Workspace data stays local: bookmarks, tags, and persistent deduplication cache.</p>
+
+      <div class="tf3-set-group">
+        <div class="tf3-set-group-title">⬇ Download & Export</div>
+        <label class="tf3-set-row">
+          <input type="checkbox" id="tf5-opt-zip" ${S.zipMode ? 'checked' : ''}>
+          <span class="tf3-set-label">
+            <strong>Bundle batch as ZIP archive</strong>
+            <small>Combine downloads into a single .zip file without multiple save dialogs</small>
+          </span>
+        </label>
+        <label class="tf3-set-row">
+          <input type="checkbox" id="tf5-opt-naming" ${S.smartNaming ? 'checked' : ''}>
+          <span class="tf3-set-label">
+            <strong>Smart file naming</strong>
+            <small>Format as YYYY-MM-DD_Chat_FileName to prevent file overwrite</small>
+          </span>
+        </label>
+        <label class="tf3-set-row">
+          <input type="checkbox" id="tf5-opt-captions" ${S.saveCaptions ? 'checked' : ''}>
+          <span class="tf3-set-label">
+            <strong>Save captions sidecar</strong>
+            <small>Save message text alongside media as companion .txt file</small>
+          </span>
+        </label>
+      </div>
+
+      <div class="tf3-set-group">
+        <div class="tf3-set-group-title">🗄️ Workspace & Storage</div>
+        <div class="tf3-set-grid">
+          <button type="button" class="tf3-history-link" id="tf3-open-library"><span>${ico('ea8e').outerHTML}</span><span><strong>Workspace</strong><small>${S.bookmarks.length} bookmarks</small></span><span class="tf3-chevron">›</span></button>
+          <button type="button" class="tf3-history-link" id="tf3-show-history"><span>${ico('e95c').outerHTML}</span><span><strong>History</strong><small>${S.history.length} sessions</small></span><span class="tf3-chevron">›</span></button>
+          <button type="button" class="tf3-history-link" id="tf3-show-errors"><span>!</span><span><strong>Errors</strong><small>${S.errors.length} recent</small></span><span class="tf3-chevron">›</span></button>
+          <button type="button" class="tf3-history-link" id="tf3-clear-vault"><span>🗑️</span><span><strong>Clear Vault</strong><small>${S.downloadedVaultKeys.size} IDs cached</small></span><span class="tf3-chevron">›</span></button>
+        </div>
+      </div>
+
+      <p class="tf3-note">All settings, bookmarks, and deduplication records are stored strictly locally in your browser.</p>
       <div class="tf3-dialog-actions tf3-dialog-actions-end"><button type="button" class="tf3-btn tf3-btn-primary tf3-done">Done</button></div>
     </div>`;
     const close = mountDialog(overlay);
@@ -2096,12 +2292,13 @@
         TelefilterVault.clearVault().then(() => alert('Download cache cleared.'));
       }
     };
+    overlay.querySelector('#tf5-opt-rp-text').onchange = e => { S.repostText = e.target.checked; saveStorage(); };
+    overlay.querySelector('#tf5-opt-rp-media').onchange = e => { S.repostMedia = e.target.checked; saveStorage(); };
     overlay.querySelector('#tf5-opt-zip').onchange = e => { S.zipMode = e.target.checked; saveStorage(); renderActionButtons(); };
     overlay.querySelector('#tf5-opt-naming').onchange = e => { S.smartNaming = e.target.checked; saveStorage(); };
     overlay.querySelector('#tf5-opt-captions').onchange = e => { S.saveCaptions = e.target.checked; saveStorage(); };
   }
 
-  /* ─── CONTROL BAR BUILDER ─────────── */
   function buildBar() {
     const bar = document.createElement('div');
     bar.className = 'tf3-ctrl';
@@ -2119,8 +2316,8 @@
     const allPill = document.createElement('button');
     allPill.className = 'tf3-pill tf3-filter-pill tf3-all-pill active';
     allPill.type = 'button';
-    allPill.title = 'Show all';
-    allPill.setAttribute('aria-label', 'Show all');
+    allPill.title = 'Show all messages';
+    allPill.setAttribute('aria-label', 'Show all messages');
     allPill.setAttribute('aria-pressed', 'true');
     allPill.textContent = 'All';
     allPill.onclick = () => {
@@ -2140,9 +2337,9 @@
       p.dataset.key = f.key;
       const canBatch = f.key !== 'text';
       p.title = canBatch
-        ? `${f.label}: click to filter · double-click to download loaded ${f.label.toLowerCase()}`
-        : `${f.label}: click to filter`;
-      p.setAttribute('aria-label', canBatch ? 'Filter ' + f.label + '; double-click to download loaded items' : 'Filter ' + f.label);
+        ? `${f.label} (Double-click: download all)`
+        : f.label;
+      p.setAttribute('aria-label', p.title);
       p.setAttribute('aria-pressed', 'false');
       p.appendChild(ico(f.ico));
       const lbl = document.createElement('span');
@@ -2157,20 +2354,18 @@
     const aw = document.createElement('div');
     aw.className = 'tf3-aw';
 
-    // Harvest Pill (Deep DOM Virtualization Buster)
     const harvestBtn = document.createElement('button');
     harvestBtn.className = 'tf3-pill tf5-harvest-pill';
     harvestBtn.type = 'button';
-    harvestBtn.title = 'Deep Harvester: Scroll history upward to index all media';
+    harvestBtn.title = 'Scan older history to index media';
     harvestBtn.textContent = 'Harvest history';
     harvestBtn.onclick = toggleDeepHarvester;
     S.harvestPill = harvestBtn;
 
-    // ZIP Mode Toggle Pill
     const zipBtn = document.createElement('button');
     zipBtn.className = 'tf3-pill tf5-zip-pill' + (S.zipMode ? ' active' : '');
     zipBtn.type = 'button';
-    zipBtn.title = 'Toggle ZIP Mode (Bundle all downloads into a single .zip file)';
+    zipBtn.title = 'Bundle downloads into ZIP';
     zipBtn.textContent = 'Bundle as ZIP';
     zipBtn.setAttribute('aria-pressed', String(S.zipMode));
     zipBtn.onclick = () => {
@@ -2187,7 +2382,7 @@
     dlBtn.type = 'button';
     dlBtn.style.display = 'inline-flex';
     dlBtn.title = 'Download selected media';
-    dlBtn.setAttribute('aria-label', 'Download selected Telegram media');
+    dlBtn.setAttribute('aria-label', 'Download selected media');
     const dtxt = document.createElement('span');
     dtxt.className = 'tf3-dl-label';
     dtxt.textContent = S.zipMode ? 'ZIP Download' : 'Download';
@@ -2198,8 +2393,8 @@
     const bmBtn = document.createElement('button');
     bmBtn.className = 'tf3-pill tf3-bm-pill';
     bmBtn.type = 'button';
-    bmBtn.title = 'Workspace & Library';
-    bmBtn.setAttribute('aria-label', 'Open Telefilter workspace');
+    bmBtn.title = 'Bookmarks & Library';
+    bmBtn.setAttribute('aria-label', 'Open bookmarks and workspace library');
     const bmBadge = document.createElement('span');
     bmBadge.className = 'tf3-bm-count';
     const bmLbl = document.createElement('span');
@@ -2218,7 +2413,6 @@
     sBtn.setAttribute('aria-label', 'Settings');
     sBtn.onclick = showSettings;
 
-    // Popover disclosures float below button, avoiding in-flow toolbar stretching
     const disclosure = (label, name) => {
       const box = document.createElement('details');
       box.className = 'tf3-disclosure ' + name;
@@ -2236,6 +2430,7 @@
     };
     const format = disclosure('▾', 'tf3-format');
     format.summary.classList.add('tf3-split-trigger');
+    format.summary.title = 'Download format';
     zipBtn.classList.add('tf3-menu-item');
     format.menu.appendChild(zipBtn);
 
@@ -2245,15 +2440,12 @@
 
     const more = disclosure('…', 'tf3-more');
     more.summary.classList.add('tf3-icon-pill');
-    more.summary.title = 'More options';
+    more.summary.title = 'More tools';
     const historyBtn = document.createElement('button');
     historyBtn.type = 'button'; historyBtn.className = 'tf3-pill tf3-menu-item';
     historyBtn.textContent = 'History'; historyBtn.onclick = showHistory;
     harvestBtn.classList.add('tf3-menu-item');
     more.menu.append(harvestBtn, historyBtn, sBtn);
-
-    more.box.addEventListener('toggle', () => { if (more.box.open) format.box.open = false; });
-    format.box.addEventListener('toggle', () => { if (format.box.open) more.box.open = false; });
 
     aw.append(split, bmBtn, more.box);
     content.append(pw, aw);
@@ -2262,7 +2454,149 @@
     return bar;
   }
 
-  /* ─── INJECT & DOM WATCHER ─── */
+  function getSelectedCount() {
+    try {
+      const selection = typeof TG !== 'undefined' ? TG?.selection?.() : null;
+      if (selection?.isSelecting) {
+        if (selection.selectedMids) {
+          let count = 0;
+          for (const [_, mids] of selection.selectedMids) {
+            count += (mids?.size ?? mids?.length ?? 0);
+          }
+          if (count > 0) return count;
+        }
+      }
+    } catch (e) {}
+    return document.querySelectorAll?.('.bubble.is-selected, .Message.is-selected')?.length || 0;
+  }
+
+  function cancelNativeSelection() {
+    try {
+      const selection = typeof TG !== 'undefined' ? TG?.selection?.() : null;
+      if (selection) {
+        if (typeof selection.cancelSelection === 'function') selection.cancelSelection();
+        else if (typeof selection.clear === 'function') selection.clear();
+        else if (typeof selection.reset === 'function') selection.reset();
+      }
+    } catch (e) {}
+    const cancelBtn = document.querySelector?.('.selection-toolbar-cancel, .btn-cancel-selection, .chat-selection-clear');
+    cancelBtn?.click?.();
+    updateBulkBar();
+  }
+
+  function updateBulkBar() {
+    const bar = document.getElementById('tf5-bulk-bar');
+    if (!bar) return;
+    const count = getSelectedCount();
+    if (count > 0) {
+      const badge = bar.querySelector('.tf5-bulk-count-badge');
+      if (badge) badge.textContent = String(count);
+      const dlSpan = bar.querySelector('#tf5-bulk-dl span');
+      if (dlSpan) dlSpan.textContent = S.batchRunning ? 'Downloading...' : (S.zipMode ? 'Download ZIP' : 'Download');
+      bar.classList.add('is-visible');
+    } else {
+      bar.classList.remove('is-visible');
+    }
+  }
+
+  function buildBulkBar() {
+    let bar = document.getElementById('tf5-bulk-bar');
+    if (bar) return bar;
+    bar = document.createElement('div');
+    bar.id = 'tf5-bulk-bar';
+    bar.className = 'tf5-bulk-bar';
+
+    const info = document.createElement('div');
+    info.className = 'tf5-bulk-info';
+    const badge = document.createElement('span');
+    badge.className = 'tf5-bulk-count-badge';
+    badge.textContent = '0';
+    const infoText = document.createElement('span');
+    infoText.className = 'tf5-bulk-info-text';
+    infoText.textContent = 'selected';
+    info.append(badge, infoText);
+
+    const actions = document.createElement('div');
+    actions.className = 'tf5-bulk-actions';
+
+    const dlBtn = document.createElement('button');
+    dlBtn.type = 'button';
+    dlBtn.className = 'tf5-bulk-btn tf5-bulk-btn-primary';
+    dlBtn.id = 'tf5-bulk-dl';
+    const dlIco = typeof ico === 'function' ? ico('e979') : document.createElement('span');
+    const dlSpan = document.createElement('span');
+    dlSpan.textContent = 'Download';
+    dlBtn.append(dlIco, dlSpan);
+    dlBtn.title = 'Download selected (Double-click: toggle ZIP)';
+    dlBtn.onclick = typeof downloadNativeSelection === 'function' ? downloadNativeSelection : () => {};
+    dlBtn.ondblclick = ev => {
+      ev.preventDefault();
+      S.zipMode = !S.zipMode;
+      if (typeof saveStorage === 'function') saveStorage();
+      if (typeof renderActionButtons === 'function') renderActionButtons();
+      updateBulkBar();
+    };
+
+    const rpBtn = document.createElement('button');
+    rpBtn.type = 'button';
+    rpBtn.className = 'tf5-bulk-btn';
+    rpBtn.id = 'tf5-bulk-rp';
+    const rpIco = typeof ico === 'function' ? ico('ea8f') : document.createElement('span');
+    const rpSpan = document.createElement('span');
+    rpSpan.textContent = 'Repost';
+    rpBtn.append(rpIco, rpSpan);
+    rpBtn.title = 'Repost (Click: Saved Messages, Right-click: Pick chat)';
+    rpBtn.onclick = typeof handleRepostSelection === 'function' ? handleRepostSelection : () => {};
+    rpBtn.oncontextmenu = ev => {
+      ev.preventDefault();
+      if (typeof handleRepostSelection === 'function') handleRepostSelection(ev, true);
+    };
+
+    const bmBtn = document.createElement('button');
+    bmBtn.type = 'button';
+    bmBtn.className = 'tf5-bulk-btn';
+    bmBtn.id = 'tf5-bulk-bm';
+    const bmIco = typeof ico === 'function' ? ico('ea8e') : document.createElement('span');
+    const bmSpan = document.createElement('span');
+    bmSpan.textContent = 'Bookmark';
+    bmBtn.append(bmIco, bmSpan);
+    bmBtn.title = 'Save to Bookmarks';
+    bmBtn.onclick = async () => {
+      try {
+        if (typeof getNativeSelectedMessages !== 'function') return;
+        const selected = await getNativeSelectedMessages();
+        if (!selected.length) return;
+        let count = 0;
+        for (const row of selected) {
+          const mid = String(row.msg?.mid ?? row.msg?.id ?? '');
+          const pid = row.peerId || (typeof currentPeerId === 'function' ? currentPeerId() : '1');
+          if (mid && pid && typeof addBookmark === 'function') {
+            const preview = row.msg?.message || '';
+            addBookmark(pid, mid, preview);
+            count++;
+          }
+        }
+        if (typeof showActionAck === 'function') showActionAck(`Bookmarked ${count} msgs`, bmBtn, 'ok');
+        if (typeof updateBookmarkPill === 'function') updateBookmarkPill();
+      } catch (e) {}
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'tf5-bulk-close';
+    cancelBtn.id = 'tf5-bulk-cancel';
+    cancelBtn.title = 'Clear selection';
+    cancelBtn.textContent = '✕';
+    cancelBtn.onclick = ev => {
+      ev.stopPropagation();
+      cancelNativeSelection();
+    };
+
+    actions.append(dlBtn, rpBtn, bmBtn, cancelBtn);
+    bar.append(info, actions);
+    return bar;
+  }
+
   let bubblesHost = null, watchedBubbles = null, bubblesHostObserver = null;
   let barHost = null, watchedBar = null, barHostObserver = null;
 
@@ -2290,7 +2624,6 @@
 
   function teardownDisconnectedChat() {
     if (!S.col && !S.bubbles && !S.bar) return;
-    stopCtxWatch();
     S.mediaObserver?.disconnect(); S.mediaObserver = null;
     S.scrollCleanup?.(); S.scrollCleanup = null;
     clearTimeout(S.scrollTimer); S.scrollTimer = 0; S.isScrolling = false; S.mediaDirtyDuringScroll = false;
@@ -2304,6 +2637,7 @@
     S.mediaMid = new WeakMap();
     S.bubbles = null; S.col?.classList?.remove('tf3-chat-has-bar'); S.col = null; S.bar = null;
     S.dlPill = null; S.bmPill = null; S.harvestPill = null; S.zipPill = null;
+    document.getElementById('tf5-bulk-bar')?.classList.remove('is-visible');
   }
 
   function inject(col) {
@@ -2372,6 +2706,10 @@
     syncBarTheme(bar, chat);
     renderActionButtons();
 
+    const bulkBar = buildBulkBar();
+    if (chat && !chat.contains(bulkBar)) chat.appendChild(bulkBar);
+    updateBulkBar();
+
     if (bubblesChanged) { S.bubbles = bub; setupMediaCounter(bub); watchBubblesHost(bub); }
     else if (barChanged) updateBadge();
     watchBarHost(bar);
@@ -2384,7 +2722,6 @@
     }
     applyFilterState();
     updateBookmarkPill();
-    // tf5-ui-debug: temporary diagnostic; prints bar geometry on every inject. Remove after layout fix.
     try {
       const r = bar.getBoundingClientRect();
       const cs = getComputedStyle(bar), pcs = getComputedStyle(bar.parentElement);
@@ -2401,133 +2738,6 @@
     } catch (e) { /* diagnostics must never break injection */ }
     return true;
   }
-
-  /* ─── LEAN 2-ACTION RIGHT-CLICK (Download & Bookmark) ─── */
-  const MSG_SELECTOR = '[data-mid]';
-  let ctxObserver = null, ctxTimers = [], ctxCleanupTimer = 0, ctxReqId = 0;
-
-  function stopCtxWatch() {
-    ctxObserver?.disconnect();
-    ctxObserver = null;
-    ctxTimers.forEach(clearTimeout);
-    ctxTimers = [];
-    clearTimeout(ctxCleanupTimer);
-    ctxCleanupTimer = 0;
-  }
-
-  function isUsableCtxMenu(menu) {
-    if (!menu?.isConnected) return false;
-    const style = getComputedStyle(menu);
-    if (style.display === 'none' || style.visibility === 'hidden') return false;
-    return Boolean(menu.querySelector('.btn-menu-item:not(.tf3-ctx-action),[role="menuitem"]:not(.tf3-ctx-action)'));
-  }
-
-  function findTelegramCtxMenu() {
-    const direct = document.getElementById('bubble-contextmenu');
-    if (isUsableCtxMenu(direct)) return direct;
-    const menus = document.querySelectorAll('.btn-menu,[role="menu"]');
-    for (let i = menus.length - 1; i >= 0; i--) {
-      if (isUsableCtxMenu(menus[i])) return menus[i];
-    }
-    return null;
-  }
-
-  function ensureCtxAction(menu, id, icon, label, run) {
-    const ref = menu.querySelector('.btn-menu-item:not(.tf3-ctx-action),[role="menuitem"]:not(.tf3-ctx-action)');
-    if (!ref) return null;
-    let item = menu.querySelector('#' + id);
-    if (!item) {
-      item = document.createElement(ref.tagName === 'BUTTON' ? 'button' : 'div');
-      if (item.tagName === 'BUTTON') item.type = 'button';
-      if (typeof ref.className === 'string') item.className = ref.className;
-      item.classList.add('tf3-ctx-action');
-      item.id = id;
-      item.tabIndex = 0;
-      item.setAttribute('role', 'menuitem');
-      const iconEl = document.createElement('span');
-      iconEl.className = 'tf3-ctx-icon';
-      const textEl = document.createElement('span');
-      textEl.className = ref.querySelector('.btn-menu-item-text') ? 'i18n btn-menu-item-text tf3-ctx-text' : 'tf3-ctx-text';
-      item.append(iconEl, textEl);
-      ref.insertAdjacentElement('beforebegin', item);
-    }
-    const iconEl = item.querySelector('.tf3-ctx-icon');
-    const textEl = item.querySelector('.tf3-ctx-text');
-    if (iconEl.textContent !== icon) iconEl.textContent = icon;
-    if (textEl.textContent !== label) textEl.textContent = label;
-    item.onclick = ev => { ev.preventDefault(); pulseControl(item); stopCtxWatch(); run(); };
-    return item;
-  }
-
-  async function downloadCtxMedia(peerId, mid) {
-    if (S.batchRunning) return;
-    try {
-      const msg = await lookupMsg(peerId, mid);
-      if (!msg || !getMedia(msg)) throw new Error('Media is not available');
-      await downloadTargets([msg], 'Downloading 1 item', peerId);
-    } catch (err) {
-      recordError(`Download #${mid}`, err, mid);
-    }
-  }
-
-  function patchCtxMenu(ctx) {
-    const menu = findTelegramCtxMenu();
-    if (!menu) return false;
-    const isBm = S.bmKeys.has(mediaKey(ctx.peerId, ctx.mid));
-
-    // 1. Download (only for media)
-    if (ctx.isMedia) {
-      ensureCtxAction(menu, 'tf3-ctxdl', 'v', S.zipMode ? 'Download (ZIP)' : 'Download', () => {
-        showActionAck('Queued for download', ctx.anchor, 'ok');
-        void downloadCtxMedia(ctx.peerId, ctx.mid);
-      });
-    } else {
-      menu.querySelector('#tf3-ctxdl')?.remove();
-    }
-
-    // 2. Bookmark toggle
-    ensureCtxAction(menu, 'tf3-ctxbm', 'B', isBm ? 'Remove bookmark' : 'Bookmark message', () => {
-      void addBookmark(ctx.peerId, ctx.mid, ctx.preview);
-      showActionAck(isBm ? 'Bookmark removed' : 'Bookmarked', ctx.anchor, isBm ? 'danger' : 'ok');
-    });
-
-    return true;
-  }
-
-  function watchCtxMenu(ctx, reqId) {
-    stopCtxWatch();
-    const attempt = () => {
-      if (reqId === ctxReqId && patchCtxMenu(ctx)) {
-        stopCtxWatch();
-      }
-    };
-    ctxObserver = new MutationObserver(attempt);
-    ctxObserver.observe(document.body, { subtree: true, childList: true });
-    [20, 60, 140, 300].forEach(delay => {
-      ctxTimers.push(setTimeout(attempt, delay));
-    });
-    ctxCleanupTimer = setTimeout(() => {
-      if (reqId === ctxReqId) stopCtxWatch();
-    }, UI.contextWatch);
-  }
-
-  function prepareCtxMenu(el, reqId) {
-    if (reqId !== ctxReqId || !el) return;
-    const mid = getMidFromBubble(el);
-    const peerId = normalizePeerId(el.dataset?.peerId || currentPeerId());
-    if (!mid || !peerId) return;
-    const previewEl = el.querySelector('.text-content, .message-text') || el.querySelector('.message-content');
-    const preview = previewEl?.textContent?.trim().slice(0, 240) || `Message #${mid}`;
-    watchCtxMenu({ peerId, mid: String(mid), preview, isMedia: isMediaBubble(el), anchor: el, locatorCtx: locatorContext() }, reqId);
-  }
-
-  document.addEventListener('contextmenu', ev => {
-    stopCtxWatch();
-    const reqId = ++ctxReqId;
-    const bubble = ev.target.closest?.('.Message.message-list-item,.bubble') || ev.target.closest?.(MSG_SELECTOR);
-    if (!bubble || !S.bubbles?.contains(bubble)) return;
-    prepareCtxMenu(bubble, reqId);
-  }, true);
 
   const findColumn = () => document.getElementById('MiddleColumn') || document.getElementById('column-center');
 
@@ -2583,13 +2793,11 @@
     }
   }, true);
 
-  /* ─── STYLES & ANIMATIONS ────── */
   function mountStyles() {
     if (!document.documentElement || document.getElementById('tf3-base-css')) return false;
     const css = document.createElement('style');
     css.id = 'tf3-base-css';
     css.textContent = `
-    /* ═══ CONTROL BAR ═══ */
     .tf3-ctrl {
       --tf3-accent: var(--theme-primary-color, var(--color-primary, #3390ec));
       --tf3-text: var(--color-text, var(--text-color, #111418));
@@ -2625,14 +2833,12 @@
     }
     .tf3-ctrl button { box-sizing: border-box; font: inherit; -webkit-appearance: none; appearance: none; }
 
-    /* Content Area */
     .tf3-content { display: flex; width:100%; min-width:0; align-items:center; gap:5px; flex-wrap: nowrap; }
     .tf3-pw { display: flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 3px; overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; }
     .tf3-pw::-webkit-scrollbar { display: none; }
     .tf3-aw { position: relative; display: flex; flex: 0 0 auto; align-items: center; gap: 4px; margin-left: auto; padding-left: 6px; }
     .tf3-aw::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1px; background: var(--tf3-border); }
 
-    /* Filter & Action Pills */
     .tf3-pill {
       flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
       height: 28px; min-height: 28px; line-height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--tf3-radius-sm, 6px);
@@ -2650,7 +2856,6 @@
     .tf3-pill:disabled { opacity: .4; cursor: default; transform: none; }
     .tf3-all-pill { padding-inline: 9px; }
 
-    /* Split Download Button */
     .tf3-split { display: inline-flex; align-items: center; position: relative; }
     .tf3-download-pill {
       height: 28px; min-height: 28px; padding: 0 10px; border: 1px solid color-mix(in srgb, var(--tf3-accent) 30%, transparent); border-right: none;
@@ -2681,7 +2886,6 @@
     .tf3-pill.is-running { opacity: .75; }
     .tf3-pill.is-running:not(.tf5-harvest-pill) { pointer-events: none; }
 
-    /* Popover Disclosures */
     .tf3-disclosure { position: relative; display: inline-flex; }
     .tf3-disclosure > summary { list-style: none; height: 28px; min-height: 28px; border: 1px solid var(--tf3-border); border-radius: var(--tf3-radius-sm, 6px); }
     .tf3-disclosure > summary::-webkit-details-marker { display: none; }
@@ -2715,7 +2919,6 @@
     .tf5-harvest-pill { color: #0288d1; }
     .tf5-harvest-pill:hover { background: color-mix(in srgb, #0288d1 12%, transparent); }
 
-    /* Library Button */
     .tf3-bm-pill { height: 28px; border: 1px solid var(--tf3-border); padding: 0 8px; }
     .tf3-bm-pill:hover { background: var(--tf3-subtle); color: var(--tf3-text); }
 
@@ -2731,13 +2934,115 @@
       .tf3-aw::before { display: none; }
     }
 
-    /* MediaViewer Action Overlay */
     .tf5-mv-actions {
       display: inline-flex; align-items: center; gap: 8px; margin-left: 12px; z-index: 1000;
     }
     .tf5-mv-actions button { min-height: 28px; padding: 0 10px; font-weight: 600; }
 
-    /* Icon Pills */
+    .tf5-bulk-bar {
+      position: absolute;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px) scale(0.96);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      background: var(--tf3-surface);
+      border: 1px solid var(--tf3-accent);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 12px color-mix(in srgb, var(--tf3-accent) 25%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--tf3-text);
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tf5-bulk-bar.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    .tf5-bulk-info {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--tf3-accent);
+      font-weight: 700;
+    }
+    .tf5-bulk-count-badge {
+      background: color-mix(in srgb, var(--tf3-accent) 18%, transparent);
+      color: var(--tf3-accent);
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid color-mix(in srgb, var(--tf3-accent) 35%, transparent);
+    }
+    .tf5-bulk-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tf5-bulk-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 7px;
+      border: 1px solid var(--tf3-border);
+      background: var(--tf3-subtle);
+      color: var(--tf3-text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.14s ease;
+    }
+    .tf5-bulk-btn:hover {
+      background: var(--tf3-subtle-hover);
+      border-color: var(--tf3-accent);
+      color: var(--tf3-text);
+      transform: translateY(-1px);
+    }
+    .tf5-bulk-btn-primary {
+      background: var(--tf3-accent);
+      border-color: var(--tf3-accent);
+      color: #ffffff;
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--tf3-accent) 40%, transparent);
+    }
+    .tf5-bulk-btn-primary:hover {
+      background: color-mix(in srgb, var(--tf3-accent) 85%, #fff);
+      color: #ffffff;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--tf3-accent) 55%, transparent);
+    }
+    .tf5-bulk-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--tf3-muted);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.14s ease;
+    }
+    .tf5-bulk-close:hover {
+      background: rgba(244, 63, 94, 0.18);
+      color: #fda4af;
+    }
+
     .tf3-icon-pill { position: relative; width: 32px; height: 32px; padding: 0; border: 1px solid var(--tf3-border); border-radius: var(--tf3-radius-sm); background: transparent; }
     .tf3-icon-pill:hover { background: var(--tf3-subtle); border-color: color-mix(in srgb, var(--tf3-text) 14%, transparent); }
     .tf3-icon-pill .tgico { font-size: 14.5px; }
@@ -2746,14 +3051,12 @@
     .tf3-row-actions { display:inline-flex; gap:6px; }
     .tf3-btn-sm { min-height:28px; padding:0 10px; border-radius:6px; font-size:11.5px; font-weight:600; }
 
-    /* Bookmark Highlight Flash */
     .tf3-bookmark-flash { animation: tf3-flash-gold 2s cubic-bezier(.2,.8,.2,1); }
     @keyframes tf3-flash-gold {
       0% { box-shadow: inset 0 0 0 2px #e5a50a; background: rgba(229,165,10,.14); }
       100% { box-shadow: inset 0 0 0 0 transparent; background: transparent; }
     }
 
-    /* ═══ FILTERS (Zero DOM mutation — CSS only) ═══ */
     .tf3-f-on .bubble,.tf3-f-on .Message.message-list-item { display: none !important; }
 
     .tf3-f_text .bubble.is-message:not(.photo):not(.video):not(.round-video):not(.gif):not(.audio):not(.voice-message):not(.document):not(.document-container):not(.sticker):not(.grouped-item) { display: flex !important; }
@@ -2770,7 +3073,6 @@
 
     .tf3-f_viral .bubble.tf3-has-reactions, .tf3-f_viral .Message.tf3-has-reactions { display: flex !important; }
 
-    /* ═══ DOWNLOAD STATUS — Inline Row ═══ */
     #tf3-panel {
       --tf3-panel-accent: var(--theme-primary-color, var(--color-primary, #3390ec));
       position: relative;
@@ -2799,13 +3101,6 @@
     #tf3-panel .pp:hover,#tf3-panel .rr:hover,#tf3-panel .xx:hover,.tf3-sx:hover { opacity:1; background:color-mix(in srgb, currentColor 8%, transparent); }
     #tf3-panel .cc:active,#tf3-panel .pp:active,#tf3-panel .rr:active,#tf3-panel .xx:active,.tf3-sx:active { transform:scale(.95); }
 
-    /* Right-click actions */
-    .tf3-ctx-icon { flex:0 0 24px; width:24px; margin-right:16px; text-align:center; font-size:16px; line-height:1; }
-    .tf3-ctx-action:not(.btn-menu-item) { display:flex; align-items:center; min-height:38px; padding:6px 14px; border:0; background:transparent; color:inherit; cursor:pointer; font:inherit; }
-    .tf3-ctx-action:not(.btn-menu-item):hover { background:color-mix(in srgb, currentColor 6%, transparent); }
-    .tf3-ctx-text { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:500; }
-
-    /* ═══ DIALOG OVERLAYS ═══ */
     #tf3-overlay {
       --tf3-dialog-bg: #ffffff;
       --tf3-dialog-text: #111418;
@@ -2845,6 +3140,19 @@
     .tf3-history-link:hover { border-color:color-mix(in srgb,var(--theme-primary-color,#3390ec) 30%,transparent); background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 8%,var(--tf3-dialog-soft)); }
     .tf3-history-link > span:first-child { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; color:var(--theme-primary-color,#3390ec); background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 12%,transparent); }
     .tf3-chevron { color:var(--tf3-dialog-muted); font-size:20px; line-height:1; }
+
+    .tf3-settings-card { width: min(480px, 94vw); }
+    .tf3-set-group { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .tf3-set-group-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--tf3-dialog-muted); margin-bottom: 1px; }
+    .tf3-set-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 10px; border-radius: 8px; background: var(--tf3-dialog-soft); cursor: pointer; user-select: none; transition: background 0.12s; }
+    .tf3-set-row:hover { background: color-mix(in srgb, var(--theme-primary-color, #3390ec) 8%, var(--tf3-dialog-soft)); }
+    .tf3-set-row input[type="checkbox"] { margin-top: 3px; accent-color: var(--theme-primary-color, #3390ec); cursor: pointer; width: 15px; height: 15px; flex-shrink: 0; }
+    .tf3-set-label { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .tf3-set-label strong { font-size: 12.5px; font-weight: 600; color: var(--tf3-dialog-text); }
+    .tf3-set-label small { font-size: 11px; color: var(--tf3-dialog-muted); line-height: 1.3; }
+    .tf3-set-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    @media (max-width: 480px) { .tf3-set-grid { grid-template-columns: 1fr; } }
+
     .tf3-search { box-sizing:border-box; width:100%; min-height:36px; margin:0 0 10px; padding:8px 12px; border:1px solid var(--tf3-dialog-line); border-radius:8px; outline:none; background:var(--tf3-dialog-soft); color:var(--tf3-dialog-text); font-size:12.5px; transition:border-color .14s; }
     .tf3-search::placeholder { color:var(--tf3-dialog-muted); }
     .tf3-search:focus { border-color:var(--theme-primary-color,#3390ec); }
@@ -2886,7 +3194,6 @@
       .tf3-card { width:min(440px,96vw); padding:14px; }
     }
 
-    /* Library UI */
     .tf3-library-chips { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 10px; }
     .tf3-mini-chip { min-height:26px; padding:0 9px; border:1px solid var(--tf3-dialog-line); border-radius:6px;
       background:var(--tf3-dialog-soft); color:var(--tf3-dialog-text); cursor:pointer; font-size:11.5px; font-weight:600; transition:background .12s,color .12s; }
@@ -2902,12 +3209,6 @@
     .tf3-error-row { display:flex; flex-direction:column; gap:2px; padding:8px 10px; border-radius:8px; background:var(--tf3-dialog-soft); }
     .tf3-error-row strong { font-size:11.5px; }
     .tf3-error-row small { color:var(--tf3-dialog-muted); font-size:10.5px; overflow-wrap:anywhere; }
-    @media (max-width:560px) {
-      .tf3-library-card { width:96vw; }
-      .tf3-library-row { grid-template-columns:1fr; }
-      .tf3-library-row .tf3-row-actions { justify-content:flex-end; }
-    }
-
     .tf3-library-toolbar { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
     .tf3-library-toolbar .tf3-library-chips { margin:0; }
     .tf3-workspace-card { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; padding:9px 11px; border:1px solid var(--tf3-dialog-line); border-radius:8px; background:var(--tf3-dialog-soft); }
@@ -2918,11 +3219,15 @@
     .tf3-tagline { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
     .tf3-tag { padding:1px 6px; border-radius:4px; background:color-mix(in srgb,var(--theme-primary-color,#3390ec) 10%,transparent); color:var(--theme-primary-color,#3390ec); font-size:9.5px; font-weight:600; }
 
-    /* Ack Toast */
     #tf3-action-ack { position:fixed; z-index:100000; min-width:110px; max-width:200px; padding:6px 10px; border-radius:8px; pointer-events:none; text-align:center; background:#1a1c1e; color:#ffffff; border:1px solid rgba(255,255,255,.1); box-shadow:0 6px 18px rgba(0,0,0,.25); font:650 11px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; will-change:transform,opacity; }
     #tf3-action-ack[data-tone="ok"] { background:#16733c; border-color:transparent; }
     #tf3-action-ack[data-tone="danger"] { background:#b8322d; border-color:transparent; }
-    @media (max-width:560px) { .tf3-library-toolbar { align-items:flex-start; flex-direction:column; } }
+    @media (max-width:560px) {
+      .tf3-library-card { width:96vw; }
+      .tf3-library-row { grid-template-columns:1fr; }
+      .tf3-library-row .tf3-row-actions { justify-content:flex-end; }
+      .tf3-library-toolbar { align-items:flex-start; flex-direction:column; }
+    }
     @media (prefers-reduced-motion:reduce) { .tf3-pill,#tf3-panel,#tf3-panel .pf,#tf3-overlay,.tf3-sx,.tf3-btn,.tf3-download-pill { animation:none!important; transition:none!important; } }
   `;
     document.documentElement.appendChild(css);
@@ -2969,7 +3274,6 @@
     return true;
   }
 
-  /* ─── TEST HOOKS ──────────────────── */
   if (W.__TF5_TEST_MODE__ === true && navigator?.userAgent === 'telefilter-node-test') {
     const testExport = Object.freeze({
       VERSION, locatorCtxFrom, sameLocatorContext, makeLocatorOptions,
@@ -2980,19 +3284,18 @@
       counterSnapshot: () => ({ mediaCount: S.mediaCount, catCounts: { ...S.catCounts } }),
       getBookmarkKeys: () => [...S.bmKeys],
       isMediaBubble,
-      patchCtxMenu,
       addBookmark,
       removeBookmark,
       LIMITS,
-      // V5 new exports
       createStoredZip, crc32Bytes, CRC32_TABLE, dosTimestamp,
       TelefilterVault, formatSmartFileName, sanitizeFileName,
       getMessageReactionCount, runDeepHarvester,
+      repostTargets, getRecentChats, repostSingle,
+      buildBulkBar, updateBulkBar, getSelectedCount,
     });
     W.__TF5_TEST__ = testExport;
   }
 
-  /* ─── INITIALIZATION ──────────────── */
   async function init() {
     debug(`v${VERSION} init`);
     loadStorage();
@@ -3001,6 +3304,11 @@
     enableProtectedContentUnblocker();
     watchThemeChanges();
     watchMediaViewer();
+    document.addEventListener('click', ev => {
+      if (ev.target?.closest?.('.bubble, .bubbles, .Message, .MessageList, .time, .selection-container, #column-center, .tf5-bulk-btn, .tf5-bulk-close')) {
+        setTimeout(updateBulkBar, 60);
+      }
+    }, { passive: true });
     const col = findColumn();
     if (col) { watchColumn(col); scheduleInject(0); }
     else {
