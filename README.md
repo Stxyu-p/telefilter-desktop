@@ -152,28 +152,16 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 
 ## 🚀 Installation & Setup
 
-### Option A: Greasy Fork (Recommended · Auto-Updating)
-1. Install [Tampermonkey](https://www.tampermonkey.net/) (or Violentmonkey) in your browser.
-2. Click to install directly:  
-   👉 **[Install from Greasy Fork (v5.2.0)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)**
-3. Tampermonkey will prompt you to confirm. Click **Install**.
-4. Navigate to [Telegram WebK](https://web.telegram.org/k/) to start using Telefilter.
+> Requires [Tampermonkey](https://www.tampermonkey.net/) or [Violentmonkey](https://violentmonkey.github.io/) installed in your browser.
 
-### Option B: OpenUserJS
-1. Install [Tampermonkey](https://www.tampermonkey.net/) (or Violentmonkey) in your browser.
-2. Click to install directly:  
-   👉 **[Install from OpenUserJS](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)**
-3. Confirm the installation in Tampermonkey.
+| Method | Link | Notes |
+| :--- | :--- | :--- |
+| **Greasy Fork** ⭐ | [Install](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5) | Recommended · auto-updates |
+| **OpenUserJS** | [Install](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5) | Alternative registry |
+| **GitHub RAW** | [Install](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js) | Always latest commit |
+| **Manual** | [`telefilter_desktop.user.js`](telefilter_desktop.user.js) | Copy → Tampermonkey Dashboard → paste → save |
 
-### Option C: One-Click Direct Install (GitHub RAW)
-1. Click the raw distribution link:  
-   👉 **[Install via GitHub RAW](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)**
-2. Confirm the installation in Tampermonkey.
-
-### Option D: Manual Setup
-1. Copy the source code from [`telefilter_desktop.user.js`](telefilter_desktop.user.js).
-2. In Tampermonkey Dashboard, click **Add a new script (+)**.
-3. Paste the code and save (**Ctrl + S** / **Cmd + S**).
+After installing, navigate to [Telegram WebK](https://web.telegram.org/k/) — Telefilter loads automatically.
 
 ---
 
