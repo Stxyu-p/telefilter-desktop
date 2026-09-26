@@ -19,26 +19,16 @@
 ![Storage: IndexedDB](https://img.shields.io/badge/Storage-IndexedDB%20Vault-blue?style=flat-square)
 ![Design: Clean Minimal](https://img.shields.io/badge/Design-Clean%20Minimal%20Precision-purple?style=flat-square)
 
-<br/>
-
-<p align="center">
-  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.3.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
-</p>
-
 </div>
 
 ---
 
-## 🧭 Visual Interface & Panel Tour
+## 🧭 Feature Overview
 
 Telefilter Desktop integrates directly into [Telegram WebK](https://web.telegram.org/k/) with zero DOM layout shift, maintaining Telegram's native message rendering while adding precision media intelligence.
 
 ### 1. Ultra-Compact Inline Media Toolbar
 The 34px inline toolbar docks directly underneath the active chat topbar. Filter pills toggle instantaneously via pure CSS classes, updating live counts for visible messages.
-
-<p align="center">
-  <img src="assets/panel-toolbar.png" alt="Inline Media Filter Toolbar" width="85%" style="border-radius: 6px;">
-</p>
 
 - **Instant Category Isolation:** `All`, `Text`, `Photos`, `Videos`, `Files`, and `Viral` (scrubs messages by emoji reaction counts).
 - **Split Downloader:** Click `Download` for direct native streams, or click `▾` to toggle `Bundle as ZIP` archive mode.
@@ -46,12 +36,8 @@ The 34px inline toolbar docks directly underneath the active chat topbar. Filter
 
 ---
 
-### 2. Floating Bulk Action Dock (MaxPland Style)
+### 2. Floating Bulk Action Dock
 When multiple messages are selected, an ergonomic floating action dock appears at the bottom center of the active chat.
-
-<p align="center">
-  <img src="assets/panel-bulk-bar.png" alt="Floating Bulk Action Dock" width="70%" style="border-radius: 8px;">
-</p>
 
 - **Zero Right-Click Clutter:** No need to navigate nested browser context menus.
 - **One-Click Batch Actions:** `Download` selected items, `Repost` to other chats or Saved Messages, or `Bookmark` into your local vault.
@@ -62,10 +48,6 @@ When multiple messages are selected, an ergonomic floating action dock appears a
 ### 3. Modular Settings & Selective Reposting
 Access advanced configuration anytime via the toolbar's `…` menu. Everything is organized into clear functional cards.
 
-<p align="center">
-  <img src="assets/panel-settings.png" alt="Modular Settings Dialog" width="55%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
-</p>
-
 - **↗ Repost & Forwarding Configuration:** Set your **default destination chat** once and every repost goes there automatically. Choose what to forward—enable or disable message text and media files independently.
 - **⬇ Download & Export:** Toggle single-click ZIP bundling, standardized smart file naming, and `.txt` sidecar captions.
 - **🗄️ Workspace & Storage:** Quick access to the Bookmark Library, Session History, Error Diagnostics, and IndexedDB Vault deduplication cache.
@@ -74,10 +56,6 @@ Access advanced configuration anytime via the toolbar's `…` menu. Everything i
 
 ### 4. Searchable Destination Chat Picker
 Pick a repost destination in-app — no browser prompts, no guessing. Choose once in Settings and every later repost goes straight there.
-
-<p align="center">
-  <img src="assets/panel-destination-chat.png" alt="Searchable Destination Chat Picker" width="60%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
-</p>
 
 - **Set a default once:** Settings → Repost & Forwarding → *Default destination*. Saved to browser storage, so `Repost` always targets that chat with no extra clicks.
 - **Re-pick any time:** Alt-click `Repost` (or the bulk bar button) to open the picker and change it.
@@ -91,10 +69,6 @@ Pick a repost destination in-app — no browser prompts, no guessing. Choose onc
 ### 5. Telefilter Workspace Library & Message Locator
 An offline-first personal catalog of bookmarked messages and assets, stored strictly inside your browser.
 
-<p align="center">
-  <img src="assets/panel-library.png" alt="Workspace Library Modal" width="65%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
-</p>
-
 - **Full-Fidelity Jump Locator:** 1-click jumps directly back to the original message in chat history, scrolling and flashing the target bubble.
 - **Advanced Search Syntax:** Filter by `tag:design`, `type:photo`, `chat:name`, or message ID.
 - **Tag Management & Data Export:** Add custom tags to bookmarks or export your library as structured JSON.
@@ -103,10 +77,6 @@ An offline-first personal catalog of bookmarked messages and assets, stored stri
 
 ### 6. In-Memory Streaming ZIP32 Engine & Live Progress
 When downloading albums or batches as a `.zip` archive, Telefilter compiles media in-memory using a pure client-side binary generator.
-
-<p align="center">
-  <img src="assets/panel-download.png" alt="Active Download Progress Panel" width="80%" style="border-radius: 6px;">
-</p>
 
 - **Zero External Dependencies:** Built-in Bitwise CRC32 lookup table and direct `Uint8Array` binary headers—no JSZip or external CDNs required.
 - **Real-Time Progress:** View completed items, total payload size, compression progress, and pause/cancel controls.
