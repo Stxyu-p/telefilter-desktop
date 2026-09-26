@@ -22,7 +22,7 @@ async function batch(scenario, failure = "", album = null) {
     TelefilterVault:{recordDownload:async(p,m)=>records.push(m)},
     getMediaBytes:async(msg)=>{ scenario(S); return new Uint8Array([msg.id]); },
     createStoredZip:entries=>{ if (failure === 'build') throw Error('build failed'); files.push(...entries); archives.push(true); return new Blob(['x']); },
-    sanitizeFileName:s=>s, addHistory(){}, pnlDone(){}, schedulePanelHide(){},
+    sanitizeFileName:s=>s, pnlDone(){}, schedulePanelHide(){},
     URL:{createObjectURL:()=> 'blob:test', revokeObjectURL(){}}, setTimeout(){}, setInterval(){return 0;}, clearInterval(){},
     document:{body:{appendChild(){}},createElement:()=>({click(){if(failure === "handoff") throw Error("handoff failed");},remove(){}})}
   };

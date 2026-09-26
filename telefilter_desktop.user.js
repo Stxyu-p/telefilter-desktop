@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Telefilter Desktop Edition v5
 // @namespace    telefilter-5
-// @version      5.4.0
+// @version      5.5.0
 // @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
 // @license      MIT
@@ -27,9 +27,8 @@
   }
 
   const W = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-  const VERSION = '5.4.0';
+  const VERSION = '5.5.0';
   const LIMITS = Object.freeze({
-    history: 50,
     bookmarks: 500,
     mediaPerPeer: 5000,
     mediaPeers: 25,
@@ -383,7 +382,6 @@
     mediaRecheckFrame: 0,
     mediaDirtyDuringScroll: false,
     dialogClose: null,
-    history: [],
     bookmarks: [],
     bmKeys: new Set(),
     chatFilters: new Map(),
@@ -485,7 +483,6 @@
     try {
       const d = JSON.parse(localStorage.getItem('tf3'));
       if (d) {
-        if (Array.isArray(d.history)) S.history = d.history.slice(0, LIMITS.history);
         if (Array.isArray(d.bookmarks)) {
           S.bookmarks = d.bookmarks.slice(0, LIMITS.bookmarks);
           rebuildBookmarkKeys();
@@ -516,7 +513,6 @@
   function saveStorage() {
     try {
       localStorage.setItem('tf3', JSON.stringify({
-        history: S.history.slice(0, LIMITS.history),
         bookmarks: S.bookmarks.slice(0, LIMITS.bookmarks),
         zipMode: S.zipMode,
         smartNaming: S.smartNaming,
@@ -809,8 +805,6 @@
           ok++;
         }
       }
-
-      addHistory(ok, targets.length, batchChatTitle);
 
       if (!S.panelCancel) {
         pnlDone(ok, targets.length);
@@ -1919,62 +1913,6 @@
     return close;
   }
 
-  function addHistory(ok, total, chatTitle = '') {
-    const now = new Date();
-    const safeOk = Math.max(0, Number(ok) || 0);
-    const safeTotal = Math.max(safeOk, Number(total) || safeOk);
-    S.history.unshift({
-      time: now.toLocaleString('th-TH', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      files: safeOk,
-      total: safeTotal,
-      failed: Math.max(0, safeTotal - safeOk),
-      chat: chatTitle || document.title?.slice(0, 36) || '?',
-    });
-    S.history = S.history.slice(0, LIMITS.history);
-    saveStorage();
-  }
-
-  function showHistory(e) {
-    e?.stopPropagation();
-    const overlay = document.createElement('div');
-    overlay.id = 'tf3-overlay';
-    overlay.innerHTML = `<div class="tf3-card" role="dialog" aria-modal="true" aria-labelledby="tf3-history-title">
-      <div class="tf3-sh">
-        <div class="tf3-title-wrap"><span class="tf3-title-icon">${ico('e95c').outerHTML}</span><span><strong id="tf3-history-title">Download History</strong><small>${S.history.length} session${S.history.length === 1 ? '' : 's'}</small></span></div>
-        <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
-      </div>
-      <div class="tf3-hl"></div>
-      <div class="tf3-dialog-actions"><button type="button" class="tf3-btn tf3-btn-danger tf3-hclr">Clear</button><button type="button" class="tf3-btn tf3-btn-primary tf3-done">Done</button></div>
-    </div>`;
-
-    const list = overlay.querySelector('.tf3-hl');
-    if (!S.history.length) {
-      const em = document.createElement('div');
-      em.className = 'tf3-empty';
-      em.textContent = 'No downloads yet';
-      list.appendChild(em);
-    } else {
-      const frag = document.createDocumentFragment();
-      S.history.slice(0, 20).forEach(h => {
-        const row = document.createElement('div');
-        row.className = 'tf3-hi';
-        const ok = Number.isFinite(+h.files) ? +h.files : 0;
-        const total = Number.isFinite(+h.total) ? +h.total : ok;
-        const failed = Number.isFinite(+h.failed) ? +h.failed : Math.max(0, total - ok);
-        row.innerHTML = `<span class="tf3-ht">${h.time || ''}</span><span class="tf3-hc"></span><span class="tf3-hf${failed > 0 ? ' has-failures' : ''}">${failed > 0 ? ok + '/' + total + ' · ' + failed + ' failed' : ok + ' files'}</span>`;
-        row.querySelector('.tf3-hc').textContent = h.chat || '?';
-        frag.appendChild(row);
-      });
-      list.appendChild(frag);
-    }
-
-    const close = mountDialog(overlay);
-    const clr = overlay.querySelector('.tf3-hclr');
-    clr.disabled = S.history.length === 0;
-    clr.onclick = () => { S.history = []; saveStorage(); close(); };
-    overlay.querySelector('.tf3-done').onclick = close;
-  }
-
   function showErrors(e) {
     e?.stopPropagation();
     const overlay = document.createElement('div');
@@ -2041,7 +1979,6 @@
         <div class="tf3-set-group-title">🗄️ Workspace & Storage</div>
         <div class="tf3-set-grid">
           <button type="button" class="tf3-history-link" id="tf3-open-library"><span>${ico('ea8e').outerHTML}</span><span><strong>Workspace</strong><small>${S.bookmarks.length} bookmarks</small></span><span class="tf3-chevron">›</span></button>
-          <button type="button" class="tf3-history-link" id="tf3-show-history"><span>${ico('e95c').outerHTML}</span><span><strong>History</strong><small>${S.history.length} sessions</small></span><span class="tf3-chevron">›</span></button>
           <button type="button" class="tf3-history-link" id="tf3-show-errors"><span>!</span><span><strong>Errors</strong><small>${S.errors.length} recent</small></span><span class="tf3-chevron">›</span></button>
           <button type="button" class="tf3-history-link" id="tf3-clear-vault"><span>🗑️</span><span><strong>Clear Vault</strong><small>${S.downloadedVaultKeys.size} IDs cached</small></span><span class="tf3-chevron">›</span></button>
         </div>
@@ -2053,7 +1990,6 @@
     const close = mountDialog(overlay);
     overlay.querySelector('.tf3-done').onclick = close;
     overlay.querySelector('#tf3-open-library').onclick = ev => { close(); showLocatorLibrary(ev); };
-    overlay.querySelector('#tf3-show-history').onclick = ev => { close(); showHistory(ev); };
     overlay.querySelector('#tf3-show-errors').onclick = ev => { close(); showErrors(ev); };
     overlay.querySelector('#tf3-clear-vault').onclick = () => {
       if (confirm('Clear all downloaded record history from IndexedDB?')) {
@@ -2200,10 +2136,7 @@
     const more = disclosure('…', 'tf3-more');
     more.summary.classList.add('tf3-icon-pill');
     more.summary.title = 'More tools';
-    const historyBtn = document.createElement('button');
-    historyBtn.type = 'button'; historyBtn.className = 'tf3-pill tf3-menu-item';
-    historyBtn.textContent = 'History'; historyBtn.onclick = showHistory;
-    more.menu.append(historyBtn, sBtn);
+    more.menu.append(sBtn);
 
     aw.append(split, bmBtn, more.box);
     content.append(pw, aw);
@@ -2924,11 +2857,6 @@
 
     .tf3-hl { display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; }
     .tf3-empty { padding:24px 12px; text-align:center; color:var(--tf3-dialog-muted); }
-    .tf3-hi { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; padding:9px 11px; border-radius:8px; background:var(--tf3-dialog-soft); font-size:12px; }
-    .tf3-ht { color:var(--tf3-dialog-muted); font:600 10.5px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; white-space:nowrap; }
-    .tf3-hc { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; }
-    .tf3-hf { color:var(--theme-primary-color,#3390ec); font-weight:650; white-space:nowrap; }
-    .tf3-hf.has-failures { color:#e58500; }
     .tf3-dialog-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--tf3-dialog-line); }
     .tf3-dialog-actions-end { justify-content:flex-end; }
     .tf3-btn { min-height:32px; padding:0 14px; border:1px solid transparent; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600!important; transition:background .12s,color .12s; }

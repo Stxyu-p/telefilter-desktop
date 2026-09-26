@@ -42,7 +42,7 @@ const defaultChrome = [
         const env = { S, VERSION: 'test', FILTERS: filters, isNewWebKDOM: v => isNewWebKDOM = v, debug: noop, normalizePeerId: String, currentPeerId: () => '1',
           handleControlFeedback: noop, updateBadge: noop, saveScrollAnchor: noop, applyFilterState: noop, restoreScrollAnchor: noop, saveChatFilter: noop,
           forceRefreshLazyMedia: noop, toggleFilter: noop, runCategoryJob: noop, toggleDeepHarvester: noop, saveStorage: noop, showActionAck: noop,
-          downloadNativeSelection: noop, handleRepostSelection: noop, showLocatorLibrary: noop, updateBookmarkPill: noop, showSettings: noop, showHistory: noop, syncDialogTheme: noop,
+          downloadNativeSelection: noop, handleRepostSelection: noop, showLocatorLibrary: noop, updateBookmarkPill: noop, showSettings: noop, showErrors: noop, syncDialogTheme: noop,
           setupMediaCounter: noop, watchBubblesHost: noop, watchBarHost: noop, watchColumn: noop, scheduleInject: noop };
         const api = new Function(...Object.keys(env), blocks.join('\n') + '; return {inject,mountStyles};')(...Object.values(env));
         api.mountStyles();

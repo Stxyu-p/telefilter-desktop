@@ -33,8 +33,8 @@ const defaultChrome = [
       await page.evaluate(({blocks,filters,dark}) => {
         const noop=()=>{};
         const S={zipMode:false,batchRunning:false,fActive:new Set(),panel:null,lastFailedTargets:[]};
-        const calls={filter:0,download:0,library:0,settings:0,history:0,save:0};
-        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showHistory:()=>calls.history++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
+        const calls={filter:0,download:0,library:0,settings:0,save:0};
+        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showErrors:()=>calls.settings++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
         // Code is extracted only from the trusted local artifact; no external strings.
         const api = new Function(...Object.keys(env), blocks.join('\n')+'; return {buildBar,mountStyles,renderActionButtons,pnlUpd,pnlDone};')(...Object.values(env));
         api.mountStyles();
