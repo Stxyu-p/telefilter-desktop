@@ -23,7 +23,7 @@ async function batch(scenario, failure = "", album = null) {
     getMediaBytes:async(msg)=>{ scenario(S); return new Uint8Array([msg.id]); },
     createStoredZip:entries=>{ if (failure === 'build') throw Error('build failed'); files.push(...entries); archives.push(true); return new Blob(['x']); },
     sanitizeFileName:s=>s, addHistory(){}, pnlDone(){}, schedulePanelHide(){},
-    URL:{createObjectURL:()=> 'blob:test', revokeObjectURL(){}}, setTimeout(){},
+    URL:{createObjectURL:()=> 'blob:test', revokeObjectURL(){}}, setTimeout(){}, setInterval(){return 0;}, clearInterval(){},
     document:{body:{appendChild(){}},createElement:()=>({click(){if(failure === "handoff") throw Error("handoff failed");},remove(){}})}
   };
   vm.createContext(ctx);
@@ -167,13 +167,18 @@ test('repostTargets sends text messages and reports counts', async()=>{
       }),
       myId: () => '5691312344',
     },
+    S: { repostText: true, repostMedia: true, repostDestId: '' },
+    W: { appDownloadManager: null },
+    defaultRepostDest: () => '5691312344',
+    getMedia: m => m?.media?.document || m?.media?.photo,
     findBubbleByMid: () => null,
     document: { querySelector: () => null },
     recordError() {},
     sleep: async () => {},
+    File: class { constructor(p, n, o) { this.name = n; this.size = p[0].size; this.type = o.type; } },
   };
   vm.createContext(ctx);
-  vm.runInContext(section('  async function repostTargets(', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
+  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
   const res = await ctx.run([{ mid: '101', message: 'Hello repost' }, { mid: '102', message: 'Second message' }], '9999');
   assert.equal(res.ok, 2);
   assert.equal(res.fail, 0);
@@ -181,9 +186,60 @@ test('repostTargets sends text messages and reports counts', async()=>{
   assert.equal(sentTexts[0].peerId, '9999');
   assert.equal(sentTexts[0].text, '[Repost] Hello repost');
 });
+test('repostTargets forwards full media from the message, not the DOM', async()=>{
+  const sentFiles = [];
+  let requested = null;
+  const ctx = {
+    TG: {
+      repostManager: () => ({ sendText: async () => {}, sendFile: async a => sentFiles.push(a) }),
+      myId: () => '5691312344',
+    },
+    S: { repostText: false, repostMedia: true, repostDestId: '' },
+    W: { appDownloadManager: { downloadMedia: async arg => { requested = arg; return { size: 157286400, type: 'video/mp4', arrayBuffer: () => new Uint8Array([1]) }; } } },
+    defaultRepostDest: () => '5691312344',
+    getMedia: m => m?.media?.document || m?.media?.photo,
+    findBubbleByMid: () => null,
+    document: { querySelector: () => null },
+    recordError() {},
+    sleep: async () => {},
+    File: class { constructor(p, n, o) { this.name = n; this.size = p[0].size; this.type = o.type; } },
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
+  // No DOM bubble exists (findBubbleByMid -> null): the media must still arrive.
+  const res = await ctx.run([{ mid: '7', message: '', media: { document: { mime_type: 'video/mp4', size: 157286400 } } }], '9999');
+  assert.equal(res.files, 1);
+  assert.equal(res.fail, 0);
+  assert.equal(sentFiles[0].file.size, 157286400);
+  assert.equal(sentFiles[0].file.name, 'tf-7.mp4');
+  // The ORIGINAL document is requested, not a photo thumb / stream URL.
+  assert.equal(requested.media.mime_type, 'video/mp4');
+  assert.equal(requested.thumb, undefined);
+});
+test('repostTargets counts a message with nothing to send as a failure', async()=>{
+  const errors = [];
+  const ctx = {
+    TG: { repostManager: () => ({ sendText: async () => {}, sendFile: async () => {} }), myId: () => '1' },
+    S: { repostText: true, repostMedia: true, repostDestId: '' },
+    W: { appDownloadManager: null },
+    defaultRepostDest: () => '1',
+    getMedia: () => null,
+    findBubbleByMid: () => null,
+    document: { querySelector: () => null },
+    recordError: (label) => errors.push(label),
+    sleep: async () => {},
+  };
+  vm.createContext(ctx);
+  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
+  const res = await ctx.run([{ mid: '9', message: '' }], '1');
+  assert.equal(res.ok, 0);
+  assert.equal(res.fail, 1);
+  assert.equal(errors.length, 1);
+});
 test('getRecentChats parses peer elements and deduplicates', ()=>{
   const ctx = {
-    TG: { myId: () => 5691312344 },
+    TG: { myId: () => 5691312344, im: () => null, currentPeerId: () => null },
+    W: {},
     document: {
       querySelectorAll: () => [
         { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One\nUnread' }) },

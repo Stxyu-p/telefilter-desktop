@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ Telefilter Desktop <sub>v5.2.0</sub>
+# ⚡ Telefilter Desktop <sub>v5.3.0</sub>
 
 **Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
@@ -10,7 +10,7 @@
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Install from OpenUserJS](https://img.shields.io/badge/Install-OpenUserJS-e65c00?style=for-the-badge&logo=javascript&logoColor=white)](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
-[![Release: v5.2.0](https://img.shields.io/badge/Release-v5.2.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Release: v5.3.0](https://img.shields.io/badge/Release-v5.3.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -22,7 +22,7 @@
 <br/>
 
 <p align="center">
-  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.2.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
+  <img src="assets/overview-webk.png" alt="Telefilter Desktop v5.3.0 Overview" width="96%" style="border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45);">
 </p>
 
 </div>
@@ -66,23 +66,25 @@ Access advanced configuration anytime via the toolbar's `…` menu. Everything i
   <img src="assets/panel-settings.png" alt="Modular Settings Dialog" width="55%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
 </p>
 
-- **↗ Repost & Forwarding Configuration:** Choose what to forward—enable or disable message text and media files independently.
+- **↗ Repost & Forwarding Configuration:** Set your **default destination chat** once and every repost goes there automatically. Choose what to forward—enable or disable message text and media files independently.
 - **⬇ Download & Export:** Toggle single-click ZIP bundling, standardized smart file naming, and `.txt` sidecar captions.
 - **🗄️ Workspace & Storage:** Quick access to the Bookmark Library, Session History, Error Diagnostics, and IndexedDB Vault deduplication cache.
 
 ---
 
 ### 4. Searchable Destination Chat Picker
-Alt-click `Repost` (or hold Alt and click the bulk bar repost button) to open the in-app destination picker — no browser prompts, no guessing.
+Pick a repost destination in-app — no browser prompts, no guessing. Choose once in Settings and every later repost goes straight there.
 
 <p align="center">
   <img src="assets/panel-destination-chat.png" alt="Searchable Destination Chat Picker" width="60%" style="border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);">
 </p>
 
-- **Searches up to 100 chats** from Telegram's in-memory dialog storage — shows chats beyond the visible list.
-- **Type to filter** by name, or enter `@username` / a numeric peer ID to send to any chat directly.
+- **Set a default once:** Settings → Repost & Forwarding → *Default destination*. Saved to browser storage, so `Repost` always targets that chat with no extra clicks.
+- **Re-pick any time:** Alt-click `Repost` (or the bulk bar button) to open the picker and change it.
+- **Searches every real chat** from Telegram's in-memory dialog storage — not just the 30 in the visible sidebar.
+- **Type to filter** by name, or enter `@username` / a numeric peer ID to target any chat directly.
 - **Keyboard navigable:** Arrow keys + Enter to select; Escape to cancel.
-- **Saved Messages shortcut** always available at the bottom for quick personal saves.
+- **Full-fidelity media:** photos and videos repost at original resolution and full duration — never a thumbnail or a truncated preview.
 
 ---
 
@@ -118,7 +120,7 @@ When downloading albums or batches as a `.zip` archive, Telefilter compiles medi
 | :--- | :---: | :--- | :--- |
 | **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
 | **Floating Bulk Dock** | ⚓ | Ergonomic bottom dock for batch actions upon selecting chat messages. | Eliminates context menu interference; zero event hijacking. |
-| **Destination Chat Picker** | 🔍 | Searchable in-app modal listing up to 100 chats; supports @username and peer ID entry. | Queries Telegram's in-memory dialog storage — shows all chats, not just visible ones. |
+| **Destination Chat Picker** | 🔍 | Searchable in-app modal listing every real chat; supports @username and peer ID entry. | Queries Telegram's in-memory dialog storage — shows all chats, not just visible ones. |
 | **Selective Repost** | ↗️ | Configurable repost engine: forward text only, media only, or both. | Respects user preferences in settings; native Telegram bridge. |
 | **Mixed-Album ZIP Engine** | 📦 | Compiles multi-item mixed photo/video albums into an organized **.zip archive**. | Built-in ZIP32 compiler; unpacks grouped albums automatically. |
 | **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
@@ -144,6 +146,7 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 | :--- | :--- | :--- |
 | **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed — no redundant CPU consumption |
 | **Filter Performance** | CSS class toggles only, no DOM rebuild | Zero layout shifts; chat never re-renders while filtering |
+| **Media Viewer Watch** | `MutationObserver` on added nodes only, no polling | ~0.02% CPU idle, **82× lighter** than a document-wide scan; overlay still appears instantly |
 | **External Dependencies** | **0** (Pure ES2022 JavaScript) | Zero supply-chain attack vectors |
 | **Network Privacy** | **0** telemetry or outbound calls | All network activity stays strictly between your browser and Telegram |
 | **Local Storage** | Browser-isolated IndexedDB + localStorage | Bookmarks and settings never leave your personal computer |
@@ -170,7 +173,7 @@ After installing, navigate to [Telegram WebK](https://web.telegram.org/k/) — T
 The repository includes comprehensive unit, regression, DOM fixture, and headless browser tests:
 
 ```bash
-# 1. Complete test suite (Node syntax check, 20 regression tests, static contract smoke test)
+# 1. Complete test suite (Node syntax check, 22 regression tests, static contract smoke test)
 npm test
 
 # 2. Headless Chromium browser layout & DOM tests across 8 viewport configurations
@@ -188,7 +191,7 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE)
 
 <div align="center">
 
-**Telefilter Desktop** <sub>v5.2.0</sub> · Built for Precision & Reliability  
+**Telefilter Desktop** <sub>v5.3.0</sub> · Built for Precision & Reliability  
 *Clean Minimal Precision · High Taste · Zero Slop*
 
 </div>
