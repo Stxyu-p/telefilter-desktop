@@ -33,8 +33,8 @@ const defaultChrome = [
       await page.evaluate(({blocks,filters,dark}) => {
         const noop=()=>{};
         const S={zipMode:false,batchRunning:false,fActive:new Set(),panel:null,lastFailedTargets:[]};
-        const calls={filter:0,download:0,library:0,settings:0,history:0,harvest:0,save:0};
-        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,toggleDeepHarvester:()=>calls.harvest++,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,handleRepostSelection:noop,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showHistory:()=>calls.history++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
+        const calls={filter:0,download:0,library:0,settings:0,history:0,save:0};
+        const env={S,VERSION:'test',FILTERS:filters,handleControlFeedback:noop,updateBadge:noop,saveScrollAnchor:noop,applyFilterState:noop,restoreScrollAnchor:noop,saveChatFilter:noop,forceRefreshLazyMedia:noop,toggleFilter:()=>calls.filter++,runCategoryJob:noop,saveStorage:()=>calls.save++,showActionAck:noop,downloadNativeSelection:()=>calls.download++,showLocatorLibrary:()=>calls.library++,updateBookmarkPill:noop,showSettings:()=>calls.settings++,showHistory:()=>calls.history++,syncDialogTheme:noop,schedulePanelHide:noop,downloadTargets:noop};
         // Code is extracted only from the trusted local artifact; no external strings.
         const api = new Function(...Object.keys(env), blocks.join('\n')+'; return {buildBar,mountStyles,renderActionButtons,pnlUpd,pnlDone};')(...Object.values(env));
         api.mountStyles();
@@ -62,8 +62,6 @@ const defaultChrome = [
       await page.locator('.tf3-format summary').focus(); await page.keyboard.press('Escape');
       assert.equal(await page.locator('.tf3-format').evaluate(e=>e.open),false);
       await page.locator('.tf3-more summary').click();
-      await page.locator('.tf5-harvest-pill').click();
-      assert.equal(await page.evaluate(()=>fixture.calls.harvest),1);
       assert.deepEqual(await fits(),{overlap:false,overflow:false,outside:false},`more ${width}`);
       await page.locator('.tf3-more summary').focus(); await page.keyboard.press('Escape');
       await page.evaluate(()=>{fixture.S.batchRunning=true;fixture.api.renderActionButtons();fixture.api.pnlUpd(2,5,'Example file.jpg');});

@@ -1,16 +1,16 @@
 <div align="center">
 
-# ⚡ Telefilter Desktop <sub>v5.3.0</sub>
+# ⚡ Telefilter Desktop <sub>v5.4.0</sub>
 
 **Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
-*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Selective Repost System · Searchable Destination Picker · Mixed-Album ZIP32 Engine*  
+*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Searchable Destination Picker · Mixed-Album ZIP32 Engine*  
 *Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
 
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Install from OpenUserJS](https://img.shields.io/badge/Install-OpenUserJS-e65c00?style=for-the-badge&logo=javascript&logoColor=white)](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
-[![Release: v5.3.0](https://img.shields.io/badge/Release-v5.3.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Release: v5.4.0](https://img.shields.io/badge/Release-v5.4.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -40,29 +40,18 @@ The 34px inline toolbar docks directly underneath the active chat topbar. Filter
 When multiple messages are selected, an ergonomic floating action dock appears at the bottom center of the active chat.
 
 - **Zero Right-Click Clutter:** No need to navigate nested browser context menus.
-- **One-Click Batch Actions:** `Download` selected items, `Repost` to other chats or Saved Messages, or `Bookmark` into your local vault.
+- **One-Click Batch Actions:** `Download` selected items or `Bookmark` into your local vault.
 - **Selection Count Badge:** Displays the real-time count of selected messages across the viewport.
 
 ---
 
-### 3. Modular Settings & Selective Reposting
+### 3. Modular Settings
 Access advanced configuration anytime via the toolbar's `…` menu. Everything is organized into clear functional cards.
 
-- **↗ Repost & Forwarding Configuration:** Set your **default destination chat** once and every repost goes there automatically. Choose what to forward—enable or disable message text and media files independently.
 - **⬇ Download & Export:** Toggle single-click ZIP bundling, standardized smart file naming, and `.txt` sidecar captions.
 - **🗄️ Workspace & Storage:** Quick access to the Bookmark Library, Session History, Error Diagnostics, and IndexedDB Vault deduplication cache.
 
 ---
-
-### 4. Searchable Destination Chat Picker
-Pick a repost destination in-app — no browser prompts, no guessing. Choose once in Settings and every later repost goes straight there.
-
-- **Set a default once:** Settings → Repost & Forwarding → *Default destination*. Saved to browser storage, so `Repost` always targets that chat with no extra clicks.
-- **Re-pick any time:** Alt-click `Repost` (or the bulk bar button) to open the picker and change it.
-- **Searches every real chat** from Telegram's in-memory dialog storage — not just the 30 in the visible sidebar.
-- **Type to filter** by name, or enter `@username` / a numeric peer ID to target any chat directly.
-- **Keyboard navigable:** Arrow keys + Enter to select; Escape to cancel.
-- **Full-fidelity media:** photos and videos repost at original resolution and full duration — never a thumbnail or a truncated preview.
 
 ---
 
@@ -90,11 +79,8 @@ When downloading albums or batches as a `.zip` archive, Telefilter compiles medi
 | :--- | :---: | :--- | :--- |
 | **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
 | **Floating Bulk Dock** | ⚓ | Ergonomic bottom dock for batch actions upon selecting chat messages. | Eliminates context menu interference; zero event hijacking. |
-| **Destination Chat Picker** | 🔍 | Searchable in-app modal listing every real chat; supports @username and peer ID entry. | Queries Telegram's in-memory dialog storage — shows all chats, not just visible ones. |
-| **Selective Repost** | ↗️ | Configurable repost engine: forward text only, media only, or both. | Respects user preferences in settings; native Telegram bridge. |
 | **Mixed-Album ZIP Engine** | 📦 | Compiles multi-item mixed photo/video albums into an organized **.zip archive**. | Built-in ZIP32 compiler; unpacks grouped albums automatically. |
 | **Split Downloader** | 📥 | Dual-mode action button: 1-click native Telegram stream or toggle **▾** for ZIP bundling. | Direct memory stream with zero memory leaks or background bloat. |
-| **Deep Harvester** | ⚡ | Automated virtual scroller that traverses historical messages to build a media index. | Bypasses Telegram's Virtual DOM pruning limits for large chats. |
 | **Workspace Library** | 🔖 | Save message coordinates, tags, and local notes into an offline searchable index. | Jump directly back to any historical message origin with one click. |
 | **Smart Naming & Sidecars** | 📝 | Standardizes filenames `[YYYY-MM-DD_HHMM]_[Chat]_[Filename]` and exports sidecar `.txt` captions. | Prevents filename collisions and preserves message context. |
 | **MediaViewer Overlay** | 👁️ | Injects instant save and bookmark actions directly inside fullscreen media previews. | Quick-save photos and videos directly from fullscreen previews. |
@@ -161,7 +147,7 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE)
 
 <div align="center">
 
-**Telefilter Desktop** <sub>v5.3.0</sub> · Built for Precision & Reliability  
+**Telefilter Desktop** <sub>v5.4.0</sub> · Built for Precision & Reliability  
 *Clean Minimal Precision · High Taste · Zero Slop*
 
 </div>

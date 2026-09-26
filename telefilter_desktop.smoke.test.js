@@ -31,12 +31,7 @@ assert(code.includes('hasDownloaded'), 'Must have download check methods');
 assert(code.includes('recordDownload'), 'Must have recordDownload method');
 console.log('✔ IndexedDB Vault verified');
 
-console.log('--- 4. Testing Deep Harvester Engine ---');
-assert(code.includes('runDeepHarvester'), 'Must define deep harvesting engine');
-assert(code.includes('tf5-harvest-pill') || code.includes('Harvest'), 'Must have harvest UI trigger');
-console.log('✔ Deep Harvester verified');
-
-console.log('--- 5. Testing MediaViewer Direct Actions ---');
+console.log('--- 4. Testing MediaViewer Direct Actions ---');
 assert(code.includes('watchMediaViewer'), 'Must watch MediaViewer overlay');
 assert(code.includes('tf5-mv-actions'), 'Must define tf5-mv-actions overlay container');
 assert(code.includes('triggerMediaViewerDownload'), 'Must define quick download action');

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Telefilter Desktop Edition v5
 // @namespace    telefilter-5
-// @version      5.3.0
-// @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, deep harvester, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
+// @version      5.4.0
+// @description  Telefilter Desktop Edition v5 — zero-DOM media filters, pure client-side ZIP bundling, MediaViewer action overlay, protected content unblocker, reactions scrubber, and persistent IndexedDB vault.
 // @author       MIKA × P Choke × SORA
 // @license      MIT
 // @homepageURL  https://github.com/Stxyu-p/telefilter-desktop
@@ -27,7 +27,7 @@
   }
 
   const W = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-  const VERSION = '5.3.0';
+  const VERSION = '5.4.0';
   const LIMITS = Object.freeze({
     history: 50,
     bookmarks: 500,
@@ -158,7 +158,6 @@
     currentMonoforumThreadId: () => W.appImManager?.chat?.monoforumThreadId ?? null,
     selection: () => W.appImManager?.chat?.selection ?? null,
     myId: () => W.appImManager?.myId ?? null,
-    repostManager: () => W.appImManager?.chat?.managers?.appMessagesManager ?? W.appMessagesManager ?? null,
     lookupMessage: (pid, mid) => W.mtprotoMessagePort?.getMessageByPeer(pid, +mid),
     downloadMedia(media) {
       const dm = W.appDownloadManager;
@@ -368,14 +367,9 @@
     zipMode: false,
     smartNaming: true,
     saveCaptions: true,
-    repostText: true,
-    repostMedia: true,
-    repostDestId: '',
-    repostDestName: '',
     dlPill: null,
     bmPill: null,
     zipPill: null,
-    harvestPill: null,
     bar: null,
     col: null,
     bubbles: null,
@@ -499,10 +493,6 @@
         if (typeof d.zipMode === 'boolean') S.zipMode = d.zipMode;
         if (typeof d.smartNaming === 'boolean') S.smartNaming = d.smartNaming;
         if (typeof d.saveCaptions === 'boolean') S.saveCaptions = d.saveCaptions;
-        if (typeof d.repostText === 'boolean') S.repostText = d.repostText;
-        if (typeof d.repostMedia === 'boolean') S.repostMedia = d.repostMedia;
-        if (typeof d.repostDestId === 'string' || typeof d.repostDestId === 'number') S.repostDestId = d.repostDestId;
-        if (typeof d.repostDestName === 'string') S.repostDestName = d.repostDestName;
       }
       try {
         const fm = JSON.parse(localStorage.getItem(FILTER_MEM_KEY));
@@ -531,10 +521,6 @@
         zipMode: S.zipMode,
         smartNaming: S.smartNaming,
         saveCaptions: S.saveCaptions,
-        repostText: S.repostText,
-        repostMedia: S.repostMedia,
-        repostDestId: S.repostDestId,
-        repostDestName: S.repostDestName,
       }));
     } catch (e) { console.warn('[TF5] save storage failed:', e); }
   }
@@ -1005,351 +991,6 @@
     }
   }
 
-  // Every dialog the account can see, not just the ~30 rows Telegram has
-  // rendered in the sidebar: the cached dialog list and the sorted-list
-  // indexes cover chats the user has scrolled past or never loaded.
-  function getRecentChats(max = 200) {
-    const seen = new Set();
-    const chats = [];
-    const add = (rawId, title) => {
-      if (chats.length >= max) return;
-      const id = Number(rawId) || rawId;
-      if (!id || seen.has(id)) return;
-      const name = String(title || '').trim().split('\n')[0];
-      if (!name) return;
-      seen.add(id);
-      chats.push({ id, name });
-    };
-
-    const myId = TG.myId();
-    if (myId) add(myId, 'Saved Messages');
-
-    // The chat you are looking at is almost always the intended target.
-    const curId = TG.currentPeerId?.();
-    if (curId) {
-      const curTitle = getActiveChatTitle?.();
-      if (curTitle) add(curId, curTitle + ' (Current)');
-    }
-
-    const mgr = TG.im()?.chat?.managers || W.appImManager?.chat?.managers;
-    const titleOf = pid => {
-      try {
-        if (typeof mgr?.appPeersManager?.getPeerString === 'function') {
-          const s = mgr.appPeersManager.getPeerString(pid);
-          if (s) return s;
-        }
-        const p = mgr?.appPeersManager?.getPeer?.(pid);
-        return p?.title || [p?.first_name, p?.last_name].filter(Boolean).join(' ') || p?.username || '';
-      } catch (_) { return ''; }
-    };
-
-    try {
-      const cached = typeof mgr?.dialogsStorage?.getCachedDialogs === 'function' ? mgr.dialogsStorage.getCachedDialogs() : null;
-      for (const d of (Array.isArray(cached) ? cached : [])) {
-        const pid = d?.peerId != null ? d.peerId : d?.peer_id;
-        if (pid != null) add(pid, titleOf(pid) || d?.title);
-      }
-    } catch (_) {}
-
-    try {
-      const xds = mgr?.appDialogsManager?.xds || (mgr?.appDialogsManager?.xd ? { 0: mgr.appDialogsManager.xd } : null);
-      for (const key of Object.keys(xds || {})) {
-        const sorted = xds[key]?.sortedList?.getSortedItems?.();
-        for (const item of (Array.isArray(sorted) ? sorted : [])) {
-          const pid = item?.id != null ? item.id : item?.peerId;
-          if (pid != null) add(pid, titleOf(pid) || item?.title);
-        }
-      }
-    } catch (_) {}
-
-    // Rendered sidebar rows, as a last-resort fallback.
-    for (const el of document.querySelectorAll('[data-peer-id]')) {
-      if (chats.length >= max) break;
-      const t = el.querySelector?.('.peer-title, .title, .dialog-title');
-      add(el.dataset?.peerId, ((t || el).textContent) || '');
-    }
-    return chats;
-  }
-
-  // In-app searchable destination picker. Resolves to a peer id, or null when
-  // the user cancels. ponytail: no virtual list; 200 rows renders fine.
-  async function promptDestinationChat(preferredId) {
-    const chats = getRecentChats(200);
-    if (!chats.length) return TG.myId();
-    if (typeof document === 'undefined' || !document.body) {
-      const lines = chats.slice(0, 30).map((c, i) => `${i + 1}. ${c.name}`).join('\n');
-      const input = prompt('Select destination chat (0 = Cancel):\n' + lines, '1');
-      if (!input) return null;
-      const n = parseInt(input, 10);
-      return n >= 1 && n <= Math.min(30, chats.length) ? chats[n - 1].id : null;
-    }
-
-    return new Promise(resolve => {
-      let settled = false, close = () => {};
-      const finish = result => { if (!settled) { settled = true; close(); resolve(result); } };
-
-      const overlay = document.createElement('div');
-      overlay.id = 'tf3-overlay';
-      overlay.innerHTML = `<div class="tf3-card tf3-dest-card" role="dialog" aria-modal="true" aria-labelledby="tf3-dest-title">
-        <div class="tf3-sh">
-          <div class="tf3-title-wrap">
-            <span class="tf3-title-icon">${ico('ea8f').outerHTML}</span>
-            <span><strong id="tf3-dest-title">Select Destination Chat</strong><small class="tf3-dest-count">${chats.length} chats</small></span>
-          </div>
-          <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
-        </div>
-        <div class="tf3-dest-search-wrap">
-          <input type="text" class="tf3-search tf3-dest-search" placeholder="Search chats or type @username / ID" autocomplete="off" spellcheck="false" aria-label="Search destination chats">
-        </div>
-        <div class="tf3-dest-list" role="listbox"></div>
-        <div class="tf3-dialog-actions">
-          <button type="button" class="tf3-btn tf3-dest-cancel">Cancel</button>
-          <button type="button" class="tf3-btn tf3-btn-primary tf3-dest-saved">${ico('ea8e').outerHTML} Saved Messages</button>
-        </div>
-      </div>`;
-
-      const listEl = overlay.querySelector('.tf3-dest-list');
-      const searchEl = overlay.querySelector('.tf3-dest-search');
-
-      const renderList = q => {
-        listEl.textContent = '';
-        const needle = String(q || '').trim().toLowerCase();
-        const matches = needle
-          ? chats.filter(c => c.name.toLowerCase().includes(needle) || String(c.id) === needle)
-          : chats;
-        if (!matches.length) {
-          const empty = document.createElement('div');
-          empty.className = 'tf3-dest-empty';
-          empty.textContent = needle ? 'No chat matches “' + q + '”' : 'No chats available';
-          listEl.appendChild(empty);
-          return;
-        }
-        const frag = document.createDocumentFragment();
-        for (const c of matches) {
-          const isSaved = TG.myId() != null && String(c.id) === String(TG.myId());
-          const item = document.createElement('button');
-          item.type = 'button';
-          item.className = 'tf3-dest-item';
-          item.setAttribute('role', 'option');
-          if (String(c.id) === String(preferredId)) item.setAttribute('aria-current', 'true');
-          item.innerHTML = `<span class="tf3-dest-icon">${ico(isSaved ? 'ea8e' : 'ea87').outerHTML}</span>
-            <span class="tf3-dest-info">
-              <strong class="tf3-dest-name"></strong>
-              <small class="tf3-dest-id"></small>
-            </span>
-            <span class="tf3-dest-action">${ico('ea8f').outerHTML}</span>`;
-          item.querySelector('.tf3-dest-name').textContent = c.name;
-          item.querySelector('.tf3-dest-id').textContent =
-            isSaved ? 'Saved Messages · Personal' : (Number(c.id) > 0 ? 'Peer #' + c.id : 'Chat #' + c.id);
-          item.onclick = () => finish(c.id);
-          frag.appendChild(item);
-        }
-        listEl.appendChild(frag);
-      };
-
-      renderList('');
-      searchEl.addEventListener('input', () => renderList(searchEl.value));
-      searchEl.addEventListener('keydown', ev => {
-        if (ev.key !== 'Enter') return;
-        ev.preventDefault();
-        const first = listEl.querySelector('.tf3-dest-item');
-        if (first) first.click();
-      });
-
-      close = mountDialog(overlay);
-      overlay.querySelector('.tf3-dest-cancel').onclick = () => finish(null);
-      overlay.querySelector('.tf3-sx').onclick = () => finish(null);
-      overlay.querySelector('.tf3-dest-saved').onclick = () => finish(TG.myId());
-      setTimeout(() => searchEl.focus(), 50);
-    });
-  }
-
-  // The chat reposts go to unless the user picks a one-off destination.
-  // Settings → Default destination persists this; empty means Saved Messages.
-  const defaultRepostDest = () => S.repostDestId || TG.myId();
-
-  const mediaExtFor = msg => {
-    const doc = msg?.media?.document;
-    const mime = String(doc?.mime_type || '');
-    if (msg?.media?.photo) return '.jpg';
-    return ({ 'video/mp4': '.mp4', 'video/webm': '.webm', 'video/quicktime': '.mov',
-              'audio/mpeg': '.mp3', 'audio/ogg': '.ogg', 'audio/mp4': '.m4a',
-              'image/gif': '.gif', 'image/webp': '.webp', 'image/png': '.png' })[mime] ||
-           (mime.startsWith('video/') ? '.mp4' : mime.startsWith('audio/') ? '.ogg' :
-           mime.startsWith('image/') ? '.jpg' : '.bin');
-  };
-
-  // Full-quality media straight from the message via Telegram's own download
-  // manager: the largest photo size / the original document, never the rendered
-  // thumbnail in the DOM. Returns a Blob ready to be wrapped in a File.
-  async function repostMediaBlob(msg) {
-    const media = getMedia(msg);
-    if (!media) return null;
-    const dm = W.appDownloadManager;
-    if (typeof dm?.downloadMedia !== 'function') return null;
-    // photo: take the biggest size; video/document: the original file.
-    const thumb = media._ === 'photo'
-      ? (media.sizes || []).filter(s => s._ === 'photoSize' || s._ === 'photoSizeProgressive').slice(-1)[0]
-      : undefined;
-    const blob = await dm.downloadMedia({ media, ...(thumb ? { thumb } : {}) }, 'blob');
-    return blob && typeof blob.arrayBuffer === 'function' && blob.size > 0 ? blob : null;
-  }
-
-  async function repostTargets(targets, destPeerId, onProgress = null) {
-    if (!targets || !targets.length) return { ok: 0, fail: 0, files: 0 };
-    const pm = TG.repostManager();
-    if (!pm || typeof pm.sendText !== 'function') {
-      throw new Error('Telegram messages manager unavailable');
-    }
-    const dest = destPeerId || defaultRepostDest();
-    if (!dest) throw new Error('No destination peer specified');
-
-    const sendTextEnabled = typeof S !== 'undefined' && typeof S.repostText === 'boolean' ? S.repostText : true;
-    const sendMediaEnabled = typeof S !== 'undefined' && typeof S.repostMedia === 'boolean' ? S.repostMedia : true;
-    if (!sendTextEnabled && !sendMediaEnabled) {
-      throw new Error('Both text and media reposting are disabled in Settings');
-    }
-
-    let ok = 0, fail = 0, files = 0;
-    for (let i = 0; i < targets.length; i++) {
-      const m = targets[i];
-      const mid = String(m?.mid ?? m?.id ?? '');
-      const txt = m?.message || '';
-      let didSomething = false;
-
-      try {
-        if (sendTextEnabled && txt && txt.length) {
-          await pm.sendText({ peerId: dest, text: '[Repost] ' + txt });
-          ok++;
-          didSomething = true;
-        }
-
-        if (sendMediaEnabled && getMedia(m) && typeof pm.sendFile === 'function') {
-          const blob = await repostMediaBlob(m);
-          if (blob) {
-            const name = 'tf-' + mid + mediaExtFor(m);
-            const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
-            await pm.sendFile({ peerId: dest, file, isMedia: true });
-            files++;
-            didSomething = true;
-          }
-        }
-      } catch (err) {
-        fail++;
-        recordError(`Repost #${mid}`, err, mid);
-      }
-      // A message that produced neither text nor media is a failure, not a success.
-      if (!didSomething && !fail) { fail++; recordError(`Repost #${mid}`, 'No text or media could be sent', mid); }
-      if (onProgress) onProgress(i + 1, targets.length);
-      if (i + 1 < targets.length) await sleep(200);
-    }
-    return { ok, fail, files };
-  }
-
-  async function repostSingle(peerId, mid, anchor, destPeerId = null) {
-    try {
-      const msg = (await lookupMsg(peerId, mid)) || { id: mid, mid };
-      const dest = destPeerId || defaultRepostDest();
-      const res = await repostTargets([msg], dest);
-      if (res.ok || res.files) {
-        const where = S.repostDestName || (dest === TG.myId() ? 'Saved' : 'chat #' + dest);
-        showActionAck(`Reposted to ${where}`, anchor, 'ok');
-      } else {
-        showActionAck('Repost failed — no media or text sent', anchor, 'danger');
-      }
-      return res;
-    } catch (err) {
-      recordError(`Repost #${mid}`, err, mid);
-      showActionAck('Repost failed', anchor, 'danger');
-      return { ok: 0, fail: 1, files: 0 };
-    }
-  }
-
-  async function handleRepostSelection(e, forcePick = false) {
-    e?.stopPropagation();
-    const anchor = document.getElementById('tf5-bulk-rp') || S.dlPill;
-    const selection = TG.selection();
-    if (!selection?.isSelecting) {
-      showActionAck('Select messages first', anchor, 'accent');
-      return;
-    }
-    try {
-      const selected = await getNativeSelectedMessages();
-      if (!selected.length) {
-        showActionAck('No messages selected', anchor, 'accent');
-        return;
-      }
-      let dest = defaultRepostDest();
-      if (forcePick || e?.altKey) {
-        dest = await promptDestinationChat(S.repostDestId);
-        if (!dest) return;
-      }
-      showActionAck(`Reposting ${selected.length}...`, anchor, 'ok');
-      const targets = selected.map(row => row.msg);
-      const res = await repostTargets(targets, dest);
-      showActionAck(res.fail ? `Reposted ${res.ok} msg, ${res.fail} failed (${res.files} media)`
-                                : `Reposted ${res.ok} msg (${res.files} media)`, anchor, res.fail ? 'danger' : 'ok');
-    } catch (err) {
-      recordError('Repost selection', err);
-      showActionAck('Could not repost messages', anchor, 'danger');
-    }
-  }
-
-  let isHarvesting = false;
-  let harvestStopRequested = false;
-
-  async function runDeepHarvester(targetCount = 250, onProgress = null) {
-    if (isHarvesting || !S.bubbles) return 0;
-    const bubbles = S.bubbles, pid = normalizePeerId(currentPeerId()), ctx = locatorContext();
-    const valid = () => bubbles.isConnected && S.bubbles === bubbles && sameLocatorContext(pid, ctx);
-    if (!pid || !valid()) return 0;
-    isHarvesting = true;
-    harvestStopRequested = false;
-    const pill = S.harvestPill;
-    const scrollContainer = bubbles.closest('.scrollable-y') || bubbles.closest('.scrollable') || bubbles.parentElement || bubbles;
-    const seen = new Set(S.mediaIndex.get(pid)?.keys() || []);
-    let gained = 0, stagnantSteps = 0;
-    const started = Date.now();
-    const report = () => onProgress?.(gained, targetCount, Math.floor((Date.now() - started) / 1000));
-    if (pill) { pill.classList.add('is-running'); pill.textContent = '⏹ Stop'; }
-    try {
-      report();
-      while (!harvestStopRequested && valid() && gained < targetCount && stagnantSteps < 10 && Date.now() - started < 120000) {
-        const before = gained, top = scrollContainer.scrollTop;
-        scrollContainer.scrollTop = Math.max(0, top - 800);
-        scrollContainer.dispatchEvent(new Event('scroll', { bubbles: true }));
-        await sleep(350);
-        if (harvestStopRequested || !valid()) break;
-        resyncMediaCounters(bubbles);
-        for (const mid of S.mediaIndex.get(pid)?.keys() || []) {
-          if (!seen.has(mid)) { seen.add(mid); gained++; }
-        }
-        stagnantSteps = gained === before && scrollContainer.scrollTop === top ? stagnantSteps + 1 : 0;
-        report();
-      }
-    } finally {
-      isHarvesting = false;
-      if (pill) { pill.classList.remove('is-running'); pill.textContent = 'Harvest history'; }
-      if (valid()) { forceRefreshLazyMedia(); queueBadgeUpdate(); }
-    }
-    return gained;
-  }
-
-  function toggleDeepHarvester(e) {
-    e?.stopPropagation();
-    if (isHarvesting) {
-      harvestStopRequested = true;
-      showActionAck('Harvest stopped', S.harvestPill, 'accent');
-      return;
-    }
-    showActionAck('Harvesting history...', S.harvestPill, 'ok');
-    const anchor = S.harvestPill;
-    runDeepHarvester(300, (cur, total, seconds) => {
-      if (anchor) anchor.textContent = `Stop · ${cur}/${total} · ${seconds}s`;
-    }).then(gained => {
-      showActionAck(`Indexed +${gained} items`, anchor, 'ok');
-    }).catch(err => { recordError('Harvest', err); showActionAck('Harvest failed', anchor, 'danger'); });
-  }
 
   function getActiveMediaViewerInfo() {
     const mv = document.querySelector('.media-viewer-whole, #MediaViewer');
@@ -1363,6 +1004,9 @@
       pid: normalizePeerId(pid),
       url: v?.src || img?.src || '',
       type: v ? 'video' : 'photo',
+      width: v?.videoWidth || img?.naturalWidth || 0,
+      height: v?.videoHeight || img?.naturalHeight || 0,
+      duration: v?.duration && isFinite(v.duration) ? v.duration : 0,
       title: mv.querySelector('.peer-title, .title')?.textContent?.trim() || getActiveChatTitle(),
     };
   }
@@ -1444,15 +1088,8 @@
       bmBtn.title = 'Bookmark message';
       bmBtn.onclick = ev => { ev.stopPropagation(); pulseControl(bmBtn); triggerMediaViewerBookmark(); };
 
-      const rpBtn = document.createElement('button');
-      rpBtn.id = 'tf5-mv-rp';
-      rpBtn.type = 'button';
-      rpBtn.className = 'tf3-btn tf3-btn-sm';
-      rpBtn.innerHTML = `${ico('ea8f').outerHTML} Repost`;
-      rpBtn.title = 'Repost to Saved Messages';
-      rpBtn.onclick = ev => { ev.stopPropagation(); pulseControl(rpBtn); triggerMediaViewerRepost(); };
 
-      container.append(dlBtn, bmBtn, rpBtn);
+      container.append(dlBtn, bmBtn);
       topbar.appendChild(container);
     };
 
@@ -1491,37 +1128,6 @@
     if (existing) mountOverlay(existing);
   }
 
-  async function triggerMediaViewerRepost() {
-    const anchor = document.getElementById('tf5-mv-rp') || document.getElementById('tf5-mv-dl');
-    try {
-      const target = getActiveViewerMessageTarget();
-      const pid = target?.peerId ? normalizePeerId(target.peerId) : normalizePeerId(currentPeerId());
-      const mid = String(target?.lastMsgId || '');
-      if (mid && pid) {
-        showActionAck('Reposting...', anchor, 'ok');
-        await repostSingle(pid, mid, anchor);
-        return;
-      }
-      const info = getActiveMediaViewerInfo();
-      if (!info?.url) {
-        showActionAck('No media detected', anchor, 'danger');
-        return;
-      }
-      const pm = TG.repostManager();
-      const dest = defaultRepostDest();
-      if (!pm || !dest) throw new Error('Telegram repost API unavailable');
-      showActionAck('Reposting...', anchor, 'ok');
-      const res = await fetch(info.url);
-      const blob = await res.blob();
-      const ext = info.type === 'video' ? '.mp4' : '.jpg';
-      const file = new File([blob], `tf-viewer-media${ext}`, { type: blob.type || 'application/octet-stream' });
-      await pm.sendFile({ peerId: dest, file, isMedia: true });
-      showActionAck(`Reposted to ${S.repostDestName || 'Saved'}`, anchor, 'ok');
-    } catch (err) {
-      recordError('Viewer repost', err);
-      showActionAck('Repost failed', anchor, 'danger');
-    }
-  }
 
   function getActiveChatTitle() {
     const titleEl = document.querySelector('.MiddleHeader .title, .chat-header .title, .sidebar-header .title');
@@ -1813,20 +1419,6 @@
         const jump = document.createElement('button'); jump.type = 'button'; jump.className = 'tf3-btn tf3-btn-primary tf3-btn-sm'; jump.textContent = 'Jump'; jump.title = 'Jump to message';
         jump.onclick = () => { close(); jumpToLocator(row.mid, row.pid, locatorCtxFrom(row)); };
         actions.appendChild(jump);
-        const rp = document.createElement('button'); rp.type = 'button'; rp.className = 'tf3-btn tf3-btn-sm'; rp.textContent = 'Repost'; rp.title = 'Repost (Alt-click: Pick chat)';
-        rp.onclick = async e => {
-          rp.disabled = true;
-          try {
-            let dest = defaultRepostDest();
-            if (e.altKey) {
-              dest = await promptDestinationChat(S.repostDestId);
-              if (!dest) return;
-            }
-            showActionAck('Reposting...', rp, 'ok');
-            await repostSingle(row.pid, row.mid, rp, dest);
-          } finally { rp.disabled = false; }
-        };
-        actions.appendChild(rp);
         const dl = document.createElement('button'); dl.type = 'button'; dl.className = 'tf3-btn tf3-btn-sm'; dl.textContent = 'DL'; dl.title = 'Download media';
         dl.onclick = async () => {
           dl.disabled = true;
@@ -2419,30 +2011,6 @@
         <button type="button" class="tf3-sx" aria-label="Close">${ico('e95d').outerHTML}</button>
       </div>
 
-      <div class="tf3-set-group">
-        <div class="tf3-set-group-title">↗ Repost & Forwarding</div>
-        <div class="tf3-set-current">
-          <span class="tf3-set-current-text">
-            <strong>Default destination</strong>
-            <small id="tf5-dest-current"></small>
-          </span>
-          <button type="button" class="tf3-btn tf3-btn-sm" id="tf5-opt-dest">Choose…</button>
-        </div>
-        <label class="tf3-set-row">
-          <input type="checkbox" id="tf5-opt-rp-text" ${S.repostText ? 'checked' : ''}>
-          <span class="tf3-set-label">
-            <strong>Include message text</strong>
-            <small>Forward textual message content with [Repost] header</small>
-          </span>
-        </label>
-        <label class="tf3-set-row">
-          <input type="checkbox" id="tf5-opt-rp-media" ${S.repostMedia ? 'checked' : ''}>
-          <span class="tf3-set-label">
-            <strong>Include media files</strong>
-            <small>Forward photos, videos, and animations as native media</small>
-          </span>
-        </label>
-      </div>
 
       <div class="tf3-set-group">
         <div class="tf3-set-group-title">⬇ Download & Export</div>
@@ -2484,26 +2052,6 @@
     </div>`;
     const close = mountDialog(overlay);
     const destLabel = overlay.querySelector('#tf5-dest-current');
-    const paintDest = () => {
-      destLabel.textContent = S.repostDestId
-        ? (S.repostDestName || ('Peer #' + S.repostDestId))
-        : 'Saved Messages (default)';
-    };
-    paintDest();
-    overlay.querySelector('#tf5-opt-dest').onclick = async ev => {
-      ev.stopPropagation();
-      // The picker is a second dialog. Close Settings first: mountDialog
-      // inerts every body child, so stacking two would strand the app behind
-      // an overlay that can no longer be dismissed from underneath.
-      close();
-      const picked = await promptDestinationChat(S.repostDestId);
-      if (picked) {
-        const match = getRecentChats(200).find(c => String(c.id) === String(picked));
-        S.repostDestId = picked;
-        S.repostDestName = match?.name || '';
-        saveStorage();
-      }
-    };
     overlay.querySelector('.tf3-done').onclick = close;
     overlay.querySelector('#tf3-open-library').onclick = ev => { close(); showLocatorLibrary(ev); };
     overlay.querySelector('#tf3-show-history').onclick = ev => { close(); showHistory(ev); };
@@ -2513,8 +2061,6 @@
         TelefilterVault.clearVault().then(() => alert('Download cache cleared.'));
       }
     };
-    overlay.querySelector('#tf5-opt-rp-text').onchange = e => { S.repostText = e.target.checked; saveStorage(); };
-    overlay.querySelector('#tf5-opt-rp-media').onchange = e => { S.repostMedia = e.target.checked; saveStorage(); };
     overlay.querySelector('#tf5-opt-zip').onchange = e => { S.zipMode = e.target.checked; saveStorage(); renderActionButtons(); };
     overlay.querySelector('#tf5-opt-naming').onchange = e => { S.smartNaming = e.target.checked; saveStorage(); };
     overlay.querySelector('#tf5-opt-captions').onchange = e => { S.saveCaptions = e.target.checked; saveStorage(); };
@@ -2575,13 +2121,6 @@
     const aw = document.createElement('div');
     aw.className = 'tf3-aw';
 
-    const harvestBtn = document.createElement('button');
-    harvestBtn.className = 'tf3-pill tf5-harvest-pill';
-    harvestBtn.type = 'button';
-    harvestBtn.title = 'Scan older history to index media';
-    harvestBtn.textContent = 'Harvest history';
-    harvestBtn.onclick = toggleDeepHarvester;
-    S.harvestPill = harvestBtn;
 
     const zipBtn = document.createElement('button');
     zipBtn.className = 'tf3-pill tf5-zip-pill' + (S.zipMode ? ' active' : '');
@@ -2665,8 +2204,7 @@
     const historyBtn = document.createElement('button');
     historyBtn.type = 'button'; historyBtn.className = 'tf3-pill tf3-menu-item';
     historyBtn.textContent = 'History'; historyBtn.onclick = showHistory;
-    harvestBtn.classList.add('tf3-menu-item');
-    more.menu.append(harvestBtn, historyBtn, sBtn);
+    more.menu.append(historyBtn, sBtn);
 
     aw.append(split, bmBtn, more.box);
     content.append(pw, aw);
@@ -2758,20 +2296,6 @@
       updateBulkBar();
     };
 
-    const rpBtn = document.createElement('button');
-    rpBtn.type = 'button';
-    rpBtn.className = 'tf5-bulk-btn';
-    rpBtn.id = 'tf5-bulk-rp';
-    const rpIco = typeof ico === 'function' ? ico('ea8f') : document.createElement('span');
-    const rpSpan = document.createElement('span');
-    rpSpan.textContent = 'Repost';
-    rpBtn.append(rpIco, rpSpan);
-    rpBtn.title = 'Repost (Click: Saved Messages, Right-click: Pick chat)';
-    rpBtn.onclick = typeof handleRepostSelection === 'function' ? handleRepostSelection : () => {};
-    rpBtn.oncontextmenu = ev => {
-      ev.preventDefault();
-      if (typeof handleRepostSelection === 'function') handleRepostSelection(ev, true);
-    };
 
     const bmBtn = document.createElement('button');
     bmBtn.type = 'button';
@@ -2813,7 +2337,7 @@
       cancelNativeSelection();
     };
 
-    actions.append(dlBtn, rpBtn, bmBtn, cancelBtn);
+    actions.append(dlBtn, bmBtn, cancelBtn);
     bar.append(info, actions);
     return bar;
   }
@@ -2857,7 +2381,7 @@
     S.mediaCat = new WeakMap();
     S.mediaMid = new WeakMap();
     S.bubbles = null; S.col?.classList?.remove('tf3-chat-has-bar'); S.col = null; S.bar = null;
-    S.dlPill = null; S.bmPill = null; S.harvestPill = null; S.zipPill = null;
+    S.dlPill = null; S.bmPill = null; S.zipPill = null;
     document.getElementById('tf5-bulk-bar')?.classList.remove('is-visible');
   }
 
@@ -2922,7 +2446,6 @@
     if (S.panel && S.panel.parentElement !== bar) bar.appendChild(S.panel);
     S.dlPill = bar.querySelector('#tf3-dlb');
     S.bmPill = bar.querySelector('.tf3-bm-pill');
-    S.harvestPill = bar.querySelector('.tf5-harvest-pill');
     S.zipPill = bar.querySelector('.tf5-zip-pill');
     syncBarTheme(bar, chat);
     renderActionButtons();
@@ -3105,7 +2628,7 @@
     }
     .tf3-split-trigger:hover { background: var(--tf3-accent); color: #ffffff; }
     .tf3-pill.is-running { opacity: .75; }
-    .tf3-pill.is-running:not(.tf5-harvest-pill) { pointer-events: none; }
+    .tf3-pill.is-running { pointer-events: none; }
 
     .tf3-disclosure { position: relative; display: inline-flex; }
     .tf3-disclosure > summary { list-style: none; height: 28px; min-height: 28px; border: 1px solid var(--tf3-border); border-radius: var(--tf3-radius-sm, 6px); }
@@ -3137,8 +2660,6 @@
     }
     .tf3-menu-item:hover { background: var(--tf3-subtle); color: var(--tf3-text); }
     .tf3-menu-item.active { color: #ffb74d; background: color-mix(in srgb, #ff9800 12%, transparent); font-weight: 600; }
-    .tf5-harvest-pill { color: #0288d1; }
-    .tf5-harvest-pill:hover { background: color-mix(in srgb, #0288d1 12%, transparent); }
 
     .tf3-bm-pill { height: 28px; border: 1px solid var(--tf3-border); padding: 0 8px; }
     .tf3-bm-pill:hover { background: var(--tf3-subtle); color: var(--tf3-text); }
@@ -3532,9 +3053,7 @@
       LIMITS,
       createStoredZip, crc32Bytes, CRC32_TABLE, dosTimestamp,
       TelefilterVault, formatSmartFileName, sanitizeFileName,
-      getMessageReactionCount, runDeepHarvester,
-      repostTargets, getRecentChats, repostSingle, promptDestinationChat,
-      repostMediaBlob, mediaExtFor, defaultRepostDest,
+      getMessageReactionCount,
       buildBulkBar, updateBulkBar, getSelectedCount,
     });
     W.__TF5_TEST__ = testExport;

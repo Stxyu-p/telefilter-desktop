@@ -54,29 +54,6 @@ test('single download reports missing, failed, and successful outcomes honestly'
   success=true;assert.equal(await ctx.run('1','2'),true);assert.equal(writes,1);
   ctx.S.batchRunning=true;assert.equal(await ctx.run('1','2'),false);assert.equal(writes,1);
 });
-async function harvest(changeChat=false) {
-  let peer='1', steps=0;
-  const index=new Map([['old','photo']]);
-  const scroll={scrollTop:0,scrollHeight:100,dispatchEvent(){}};
-  const bubbles={isConnected:true,closest:()=>scroll};
-  const S={bubbles,mediaCount:1,mediaIndex:new Map([['1',index]])};
-  const progress=[];
-  const ctx={S,Event,Date,normalizePeerId:String,currentPeerId:()=>peer,
-    locatorContext:()=>({}),sameLocatorContext:p=>p===peer,
-    sleep:async()=>{steps++;if(changeChat)peer='2';},
-    resyncMediaCounters:b=>{assert.equal(peer,'1','must not rescan after chat switch');index.set('new'+steps,'photo');},
-    forceRefreshLazyMedia(){},queueBadgeUpdate(){}};
-  vm.createContext(ctx);
-  vm.runInContext('let isHarvesting=false,harvestStopRequested=false;'+section('  async function runDeepHarvester(', '  function toggleDeepHarvester(')+';this.run=runDeepHarvester;',ctx);
-  const gained=await ctx.run(2,n=>progress.push(n));
-  return {gained,steps,progress};
-}
-test('harvest measures unique discoveries despite constant DOM count',async()=>{
-  const r=await harvest();assert.equal(r.gained,2);assert.equal(r.progress[0],0);assert.equal(r.progress.at(-1),2);
-});
-test('harvest stops before rescanning a different chat',async()=>{
-  const r=await harvest(true);assert.equal(r.gained,0);assert.equal(r.steps,1);
-});
 test('ZIP bytes use native Blob API, choose full photo, and enforce byte budget',async()=>{
   const thumb={_: 'photoSize',type:'y',size:3};
   const media={_: 'photo',sizes:[{_: 'photoSize',type:'s',size:1},thumb]};
@@ -145,9 +122,6 @@ test('reaction removal and reinsertion preserve counts',()=>{
   a.reactions=0;run(a,1);assert.equal(S.catCounts.viral,0);
   assert.equal(a.classList.contains('tf3-has-reactions'),false);
 });
-test('harvest running CSS does not disable its Stop button',()=>{
-  assert(!source.includes('.tf3-pill.is-running { animation: tf3-pulse 1.2s ease-in-out infinite; pointer-events: none; }'));
-});
 test('viewer bookmarks never invent message IDs',()=>{
   assert(!section('  function triggerMediaViewerBookmark()', '  function watchMediaViewer()').includes('Date.now()'));
 });
@@ -156,163 +130,6 @@ test('ZIP mode is frozen for the running batch', async()=>{
   assert.equal(r.archives.length,1);
   assert.equal(r.records.length,1);
   assert.equal(r.result.ok,1);
-});
-test('repostTargets sends text messages and reports counts', async()=>{
-  const sentTexts = [];
-  const ctx = {
-    TG: {
-      repostManager: () => ({
-        sendText: async ({ peerId, text }) => { sentTexts.push({ peerId, text }); },
-        sendFile: async () => {},
-      }),
-      myId: () => '5691312344',
-    },
-    S: { repostText: true, repostMedia: true, repostDestId: '' },
-    W: { appDownloadManager: null },
-    defaultRepostDest: () => '5691312344',
-    getMedia: m => m?.media?.document || m?.media?.photo,
-    findBubbleByMid: () => null,
-    document: { querySelector: () => null },
-    recordError() {},
-    sleep: async () => {},
-    File: class { constructor(p, n, o) { this.name = n; this.size = p[0].size; this.type = o.type; } },
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
-  const res = await ctx.run([{ mid: '101', message: 'Hello repost' }, { mid: '102', message: 'Second message' }], '9999');
-  assert.equal(res.ok, 2);
-  assert.equal(res.fail, 0);
-  assert.equal(sentTexts.length, 2);
-  assert.equal(sentTexts[0].peerId, '9999');
-  assert.equal(sentTexts[0].text, '[Repost] Hello repost');
-});
-test('repostTargets forwards full media from the message, not the DOM', async()=>{
-  const sentFiles = [];
-  let requested = null;
-  const ctx = {
-    TG: {
-      repostManager: () => ({ sendText: async () => {}, sendFile: async a => sentFiles.push(a) }),
-      myId: () => '5691312344',
-    },
-    S: { repostText: false, repostMedia: true, repostDestId: '' },
-    W: { appDownloadManager: { downloadMedia: async arg => { requested = arg; return { size: 157286400, type: 'video/mp4', arrayBuffer: () => new Uint8Array([1]) }; } } },
-    defaultRepostDest: () => '5691312344',
-    getMedia: m => m?.media?.document || m?.media?.photo,
-    findBubbleByMid: () => null,
-    document: { querySelector: () => null },
-    recordError() {},
-    sleep: async () => {},
-    File: class { constructor(p, n, o) { this.name = n; this.size = p[0].size; this.type = o.type; } },
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
-  // No DOM bubble exists (findBubbleByMid -> null): the media must still arrive.
-  const res = await ctx.run([{ mid: '7', message: '', media: { document: { mime_type: 'video/mp4', size: 157286400 } } }], '9999');
-  assert.equal(res.files, 1);
-  assert.equal(res.fail, 0);
-  assert.equal(sentFiles[0].file.size, 157286400);
-  assert.equal(sentFiles[0].file.name, 'tf-7.mp4');
-  // The ORIGINAL document is requested, not a photo thumb / stream URL.
-  assert.equal(requested.media.mime_type, 'video/mp4');
-  assert.equal(requested.thumb, undefined);
-});
-test('repostTargets counts a message with nothing to send as a failure', async()=>{
-  const errors = [];
-  const ctx = {
-    TG: { repostManager: () => ({ sendText: async () => {}, sendFile: async () => {} }), myId: () => '1' },
-    S: { repostText: true, repostMedia: true, repostDestId: '' },
-    W: { appDownloadManager: null },
-    defaultRepostDest: () => '1',
-    getMedia: () => null,
-    findBubbleByMid: () => null,
-    document: { querySelector: () => null },
-    recordError: (label) => errors.push(label),
-    sleep: async () => {},
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  const mediaExtFor =', '  async function repostSingle(') + ';this.run=repostTargets;', ctx);
-  const res = await ctx.run([{ mid: '9', message: '' }], '1');
-  assert.equal(res.ok, 0);
-  assert.equal(res.fail, 1);
-  assert.equal(errors.length, 1);
-});
-test('getRecentChats parses peer elements and deduplicates', ()=>{
-  const ctx = {
-    TG: { myId: () => 5691312344, im: () => null, currentPeerId: () => null },
-    W: {},
-    document: {
-      querySelectorAll: () => [
-        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One\nUnread' }) },
-        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One Duplicate' }) },
-        { dataset: { peerId: '456' }, querySelector: () => null, textContent: 'Chat Two' },
-        { dataset: {}, querySelector: () => null },
-      ]
-    }
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  function getRecentChats(', '  async function promptDestinationChat(') + ';this.run=getRecentChats;', ctx);
-  const chats = ctx.run(10);
-  assert.equal(chats.length, 3);
-  assert.deepEqual(JSON.parse(JSON.stringify(chats)), [
-    { id: 5691312344, name: 'Saved Messages' },
-    { id: 123, name: 'Chat One' },
-    { id: 456, name: 'Chat Two' }
-  ]);
-});
-test('getRecentChats queries dialogsStorage and appPeersManager when available', ()=>{
-  const ctx = {
-    TG: {
-      myId: () => 5691312344,
-      currentPeerId: () => 9999,
-      im: () => ({
-        chat: {
-          managers: {
-            dialogsStorage: {
-              getCachedDialogs: () => [{ peerId: 777 }, { peerId: 888 }, { peerId: 5691312344 }]
-            },
-            appPeersManager: {
-              getPeerString: (id) => id === 777 ? 'Alpha Channel' : (id === 888 ? 'Beta Group' : '')
-            }
-          }
-        }
-      })
-    },
-    getActiveChatTitle: () => 'Main Discussion',
-    document: {
-      querySelectorAll: () => [
-        { dataset: { peerId: '123' }, querySelector: () => ({ textContent: 'Chat One' }) }
-      ]
-    }
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  function getRecentChats(', '  async function promptDestinationChat(') + ';this.run=getRecentChats;', ctx);
-  const chats = ctx.run(20);
-  assert.equal(chats.length, 5);
-  assert.deepEqual(JSON.parse(JSON.stringify(chats)), [
-    { id: 5691312344, name: 'Saved Messages' },
-    { id: 9999, name: 'Main Discussion (Current)' },
-    { id: 777, name: 'Alpha Channel' },
-    { id: 888, name: 'Beta Group' },
-    { id: 123, name: 'Chat One' }
-  ]);
-});
-test('promptDestinationChat handles cancel and selection in fallback mode', async ()=>{
-  const ctx = {
-    getRecentChats: () => [
-      { id: 5691312344, name: 'Saved Messages' },
-      { id: 777, name: 'Alpha Channel' }
-    ],
-    TG: { myId: () => 5691312344 },
-    prompt: (msg, def) => '2'
-  };
-  vm.createContext(ctx);
-  vm.runInContext(section('  async function promptDestinationChat(', '  async function repostTargets(') + ';this.run=promptDestinationChat;', ctx);
-  const picked = await ctx.run();
-  assert.equal(picked, 777);
-
-  ctx.prompt = () => '0';
-  const cancelled = await ctx.run();
-  assert.equal(cancelled, null);
 });
 test('buildBulkBar creates floating bulk bar elements', ()=>{
   const elements = [];
@@ -343,7 +160,6 @@ test('buildBulkBar creates floating bulk bar elements', ()=>{
     ico: () => makeEl('svg'),
     S: { zipMode: false, batchRunning: false },
     downloadNativeSelection() {},
-    handleRepostSelection() {},
     saveStorage() {},
     renderActionButtons() {},
   };
