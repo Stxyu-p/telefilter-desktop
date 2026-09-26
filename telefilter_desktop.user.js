@@ -2051,7 +2051,6 @@
       <div class="tf3-dialog-actions tf3-dialog-actions-end"><button type="button" class="tf3-btn tf3-btn-primary tf3-done">Done</button></div>
     </div>`;
     const close = mountDialog(overlay);
-    const destLabel = overlay.querySelector('#tf5-dest-current');
     overlay.querySelector('.tf3-done').onclick = close;
     overlay.querySelector('#tf3-open-library').onclick = ev => { close(); showLocatorLibrary(ev); };
     overlay.querySelector('#tf3-show-history').onclick = ev => { close(); showHistory(ev); };
