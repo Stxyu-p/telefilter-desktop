@@ -4,8 +4,8 @@
 
 **Precision Media Intelligence Suite & Batch Downloader for Telegram WebK**
 
-*Ultra-compact Inline Toolbar · Floating Bulk Action Dock · Searchable Destination Picker · Mixed-Album ZIP32 Engine*  
-*Pure Vanilla JavaScript · Zero Dependencies · 100% Client-Side Privacy*
+*Ultra-compact Inline Toolbar, Floating Bulk Action Dock, Searchable Destination Picker, Mixed-Album ZIP32 Engine*  
+*Pure Vanilla JavaScript, Zero Dependencies, 100% Client-Side Privacy*
 
 [![Install from Greasy Fork](https://img.shields.io/badge/Install-Greasy%20Fork-c62828?style=for-the-badge&logo=tampermonkey&logoColor=white)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
 [![Install from OpenUserJS](https://img.shields.io/badge/Install-OpenUserJS-e65c00?style=for-the-badge&logo=javascript&logoColor=white)](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)
@@ -67,7 +67,7 @@ An offline-first personal catalog of bookmarked messages and assets, stored stri
 ### 6. In-Memory Streaming ZIP32 Engine & Live Progress
 When downloading albums or batches as a `.zip` archive, Telefilter compiles media in-memory using a pure client-side binary generator.
 
-- **Zero External Dependencies:** Built-in Bitwise CRC32 lookup table and direct `Uint8Array` binary headers—no JSZip or external CDNs required.
+- **Zero External Dependencies:** Built-in Bitwise CRC32 lookup table and direct `Uint8Array` binary headers, no JSZip or external CDNs required.
 - **Real-Time Progress:** View completed items, total payload size, compression progress, and pause/cancel controls.
 - **Deduplication Ledger:** IndexedDB Vault remembers previously downloaded file hashes to prevent redundant downloads.
 
@@ -88,6 +88,19 @@ When downloading albums or batches as a `.zip` archive, Telefilter compiles medi
 
 ---
 
+## 📊 Feature Comparison
+
+| Capability | Manual saving / generic downloader extensions | ⚡ **Telefilter Desktop** |
+| :--- | :--- | :--- |
+| **Media filtering** | Scroll and eyeball every message | ✅ **1-click pills: Text, Photos, Videos, Files, Viral, live counts** |
+| **Bulk download** | Right click files one by one, nested menus | ✅ **Floating dock: Download or Bookmark selections in one click** |
+| **Album archives** | Bloated libraries or broken sets | ✅ **In-memory ZIP32 with CRC32, no external dependencies** |
+| **File naming** | Colliding names, lost context | ✅ **Smart `[YYYY-MM-DD_HHMM]_[Chat]_[Filename]` plus caption sidecars** |
+| **Saved library** | No history, re-download everything | ✅ **Offline vault with search, tags, jump-to-message, dedup ledger** |
+| **Privacy** | Telemetry or server side handling | ✅ **Zero telemetry, zero dependencies, browser local only** |
+
+---
+
 ## 🔬 Under the Hood & Privacy Invariants
 
 ### 1. Zero-Allocation Binary ZIP32 Compiler
@@ -100,7 +113,7 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 
 | Metric | Specification | Practical Outcome |
 | :--- | :--- | :--- |
-| **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed — no redundant CPU consumption |
+| **ZIP Encoding Mode** | Stored (no deflate) + single-pass CRC32 | Media is already compressed, no redundant CPU consumption |
 | **Filter Performance** | CSS class toggles only, no DOM rebuild | Zero layout shifts; chat never re-renders while filtering |
 | **Media Viewer Watch** | `MutationObserver` on added nodes only, no polling | ~0.02% CPU idle, **82× lighter** than a document-wide scan; overlay still appears instantly |
 | **External Dependencies** | **0** (Pure ES2022 JavaScript) | Zero supply-chain attack vectors |
@@ -115,12 +128,12 @@ Telegram WebK presents challenges when handling mixed-media albums (interleaved 
 
 | Method | Link | Notes |
 | :--- | :--- | :--- |
-| **Greasy Fork** ⭐ | [Install](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5) | Recommended · auto-updates |
+| **Greasy Fork** ⭐ | [Install](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5) | Recommended, auto-updates |
 | **OpenUserJS** | [Install](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5) | Alternative registry |
 | **GitHub RAW** | [Install](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js) | Always latest commit |
 | **Manual** | [`telefilter_desktop.user.js`](telefilter_desktop.user.js) | Copy → Tampermonkey Dashboard → paste → save |
 
-After installing, navigate to [Telegram WebK](https://web.telegram.org/k/) — Telefilter loads automatically.
+After installing, navigate to [Telegram WebK](https://web.telegram.org/k/). Telefilter loads automatically.
 
 ---
 
@@ -148,6 +161,6 @@ This project is licensed under the **MIT License**. See the [`LICENSE`](LICENSE)
 <div align="center">
 
 **Telefilter Desktop** <sub>v5.5.0</sub> · Built for Precision & Reliability  
-*Clean Minimal Precision · High Taste · Zero Slop*
+*Clean Minimal Precision, High Taste, Zero Slop*
 
 </div>
