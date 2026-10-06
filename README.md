@@ -24,60 +24,12 @@
 
 ---
 
-## 🧭 Feature Overview
+## 🧭 Core Capabilities Matrix
 
 Telefilter Desktop integrates directly into [Telegram WebK](https://web.telegram.org/k/) with zero DOM layout shift, maintaining Telegram's native message rendering while adding precision media intelligence.
 
-### 1. Ultra-Compact Inline Media Toolbar
-The 34px inline toolbar docks directly underneath the active chat topbar. Filter pills toggle instantaneously via pure CSS classes, updating live counts for visible messages.
-
-- **Instant Category Isolation:** `All`, `Text`, `Photos`, `Videos`, `Files`, and `Viral` (scrubs messages by emoji reaction counts).
-- **Split Downloader:** Click `Download` for direct native streams, or click `▾` to toggle `Bundle as ZIP` archive mode.
-- **Fast Disclosures:** Popover sub-menus open out-of-flow without expanding the chat header or obscuring messages.
-
----
-
-### 2. Floating Bulk Action Dock
-When multiple messages are selected, an ergonomic floating action dock appears at the bottom center of the active chat.
-
-- **Zero Right-Click Clutter:** No need to navigate nested browser context menus.
-- **One-Click Batch Actions:** `Download` selected items or `Bookmark` into your local vault.
-- **Selection Count Badge:** Displays the real-time count of selected messages across the viewport.
-
----
-
-### 3. Modular Settings
-Access advanced configuration anytime via the toolbar's `…` menu. Everything is organized into clear functional cards.
-
-- **⬇ Download & Export:** Toggle single-click ZIP bundling, standardized smart file naming, and `.txt` sidecar captions.
-- **🗄️ Workspace & Storage:** Quick access to the Bookmark Library, Error Diagnostics, and IndexedDB Vault deduplication cache.
-
----
-
----
-
-### 5. Telefilter Workspace Library & Message Locator
-An offline-first personal catalog of bookmarked messages and assets, stored strictly inside your browser.
-
-- **Full-Fidelity Jump Locator:** 1-click jumps directly back to the original message in chat history, scrolling and flashing the target bubble.
-- **Advanced Search Syntax:** Filter by `tag:design`, `type:photo`, `chat:name`, or message ID.
-- **Tag Management & Data Export:** Add custom tags to bookmarks or export your library as structured JSON.
-
----
-
-### 6. In-Memory Streaming ZIP32 Engine & Live Progress
-When downloading albums or batches as a `.zip` archive, Telefilter compiles media in-memory using a pure client-side binary generator.
-
-- **Zero External Dependencies:** Built-in Bitwise CRC32 lookup table and direct `Uint8Array` binary headers, no JSZip or external CDNs required.
-- **Real-Time Progress:** View completed items, total payload size, compression progress, and pause/cancel controls.
-- **Deduplication Ledger:** IndexedDB Vault remembers previously downloaded file hashes to prevent redundant downloads.
-
----
-
-## ⚡ Core Capabilities Matrix
-
 | Capability | Module | What It Does | Technical Advantage |
-| :--- | :---: | :--- | :--- |
+| :--- | :--- | :--- | :--- |
 | **Instant Media Filters** | 🎛️ | Instantly isolate **Text, Photos, Videos, Files, or Viral** messages in the active chat. | Pure CSS-class filtering with zero DOM reload or network lag. |
 | **Floating Bulk Dock** | ⚓ | Ergonomic bottom dock for batch actions upon selecting chat messages. | Eliminates context menu interference; zero event hijacking. |
 | **Mixed-Album ZIP Engine** | 📦 | Compiles multi-item mixed photo/video albums into an organized **.zip archive**. | Built-in ZIP32 compiler; unpacks grouped albums automatically. |
@@ -104,13 +56,13 @@ When downloading albums or batches as a `.zip` archive, Telefilter compiles medi
 
 ## 🔬 Under the Hood & Privacy Invariants
 
-### 1. Zero-Allocation Binary ZIP32 Compiler
+### Binary ZIP32 Compiler Architecture
 Telegram WebK presents challenges when handling mixed-media albums (interleaved photos and videos). Rather than relying on heavy third-party libraries, Telefilter Desktop embeds a native ZIP32 compiler:
 - **Bitwise CRC32 Table:** Pre-computed 256-entry lookup table (`0xEDB88320` polynomial), calculated in a single pass over each media stream.
 - **Binary Array Structs:** Constructs binary ZIP Local Headers, Central Directory Records, and End of Central Directory (EOCD) directly via `Uint8Array`.
 - **Immediate Memory Reclamation:** Releases temporary blob memory immediately upon browser disk handoff, preventing memory leaks during large downloads.
 
-### 2. Privacy & Resource Footprint
+### Resource & Privacy Profile
 
 | Metric | Specification | Practical Outcome |
 | :--- | :--- | :--- |
@@ -143,13 +95,13 @@ After installing, navigate to [Telegram WebK](https://web.telegram.org/k/). Tele
 The repository includes comprehensive unit, regression, DOM fixture, and headless browser tests:
 
 ```bash
-# 1. Complete test suite (Node syntax check, 22 regression tests, static contract smoke test)
+# Complete unit, regression, and static smoke test suite
 npm test
 
-# 2. Headless Chromium browser layout & DOM tests across 8 viewport configurations
+# Headless Chromium layout & DOM checks across multiple viewports
 npm run test:browser
 
-# 3. Regenerate all real UI panel screenshots in assets/
+# Update clean UI panel reference screenshots
 npm run capture:panels
 ```
 
