@@ -11,6 +11,7 @@
 [![Install from OpenUserJS](https://img.shields.io/badge/Install-OpenUserJS-e65c00?style=for-the-badge&logo=javascript&logoColor=white)](https://openuserjs.org/scripts/Chokechai/Telefilter_Desktop_Edition_v5)
 [![Install Direct RAW](https://img.shields.io/badge/Install-GitHub%20RAW-0284c7?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/Stxyu-p/telefilter-desktop/main/telefilter_desktop.user.js)
 [![Release: v5.5.0](https://img.shields.io/badge/Release-v5.5.0-10b981?style=for-the-badge)](https://greasyfork.org/th/scripts/596222-telefilter-desktop-edition-v5)
+[![Changelog](https://img.shields.io/badge/Changelog-View_Notes-blueviolet?style=for-the-badge)](CHANGELOG.md)
 [![Platform: Telegram WebK](https://img.shields.io/badge/Platform-Telegram%20WebK-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://web.telegram.org/k/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](LICENSE)
 
@@ -151,6 +152,12 @@ npm run test:browser
 # 3. Regenerate all real UI panel screenshots in assets/
 npm run capture:panels
 ```
+
+---
+
+## 📜 Release History & Changelog
+
+All notable changes and historical releases are documented in [CHANGELOG.md](CHANGELOG.md) following Keep a Changelog standards.
 
 ---
 

@@ -13,8 +13,8 @@ console.log('=== TELEFILTER V5 VERIFICATION TEST SUITE ===\n');
 // 1. Static Contract Checks
 console.log('--- 1. Testing Script Metadata & Version ---');
 assert(code.includes('Telefilter Desktop Edition'), 'Script name must be Telefilter');
-assert(code.includes('5.3.0'), 'Version must be 5.3.0');
-console.log('✔ Version 5.3.0 verified');
+assert(code.includes('5.5.0'), 'Version must be 5.5.0');
+console.log('✔ Version 5.5.0 verified');
 
 console.log('--- 2. Testing Pure Client-Side ZIP32 Generator (Zero Dependencies) ---');
 assert(code.includes('CRC32_TABLE'), 'Must define CRC32 table');
@@ -112,7 +112,7 @@ vm.runInContext(code, context);
 
 const TF5 = mockWindow.__TF5_TEST__;
 assert(TF5, 'Test hooks __TF5_TEST__ must be exported');
-assert.strictEqual(TF5.VERSION, '5.3.0', 'Exported version must be 5.3.0');
+assert.strictEqual(TF5.VERSION, '5.5.0', 'Exported version must be 5.5.0');
 
 // Test ZIP32 Generator
 console.log('Testing createStoredZip()...');
